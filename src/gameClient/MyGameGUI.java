@@ -336,7 +336,7 @@ public class MyGameGUI extends JFrame implements ActionListener , MouseListener,
 					
 				} catch (Exception e)
 				{
-					System.out.println("The parse from json file field.");
+					System.out.println("The parse from json file failed.");
 				}
 			}
 		}
@@ -365,13 +365,14 @@ public class MyGameGUI extends JFrame implements ActionListener , MouseListener,
 					
 				} catch (Exception e)
 				{
-					System.out.println("The parse from json file field.");
+					System.out.println("The parse from json file failed.");
 				}
 			}
 		}
 	}
 		
-	private static int nextNode(oop_graph g, int src) {
+	private static int nextNode(oop_graph g, int src) 
+	{
 		int ans = -1;
 		Collection<oop_edge_data> ee = g.getE(src);
 		Iterator<oop_edge_data> itr = ee.iterator();
