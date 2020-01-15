@@ -2,16 +2,14 @@ package gameClient;
 
 import org.json.JSONObject;
 import utils.Point3D;
+import dataStructure.edge_data;
 
 public class Fruit 
-{
-	
-	
+{	
     private Point3D _fruitLocation;
     private double _fruitValue;
     private int _fruitType;
-    //private edge_data _fruitEdge;
-
+    private edge_data _fruitEdge;
 
     public Fruit() 
     {
@@ -26,7 +24,6 @@ public class Fruit
     }
     
 
-    
 	public Fruit (String fruitJson) 
 	{
 
@@ -46,8 +43,22 @@ public class Fruit
 			System.out.println("The parse from json failed.");
 		}
 	}
-    
-  
+	
+	public String toJson() 
+	{
+		String fruitJson = "{\"Fruit\":{\"value\": " + this._fruitValue + "," + "\"type\":" + this._fruitType+ "," + "\"pos\":\"" + this._fruitLocation.toString() + "\"e\":\"" + this._fruitEdge.toString() + "\"" + "}" +"}";
+		return fruitJson;
+	}
+	
+	public void setEdge(edge_data edge) 
+	{
+		this._fruitEdge = edge;
+	}
+	
+	public edge_data getEdge() 
+	{
+		return this._fruitEdge;
+	}
 
     public int getType() 
     {
@@ -58,8 +69,6 @@ public class Fruit
     {
         return new Point3D(this._fruitLocation);
     }
-
-
 
     public double getValue() 
     {

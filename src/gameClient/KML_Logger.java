@@ -23,7 +23,7 @@ public class KML_Logger
 {
 	
 	public ArrayList<RobotG> robotArray;
-	public ArrayList<Fruit> fruitArray;
+	public static ArrayList<Fruit> fruitArray;
 	
 	
 	public static void createKML(Game_Server g, String f) throws ParseException 
@@ -108,7 +108,7 @@ public class KML_Logger
 			addToCoordinates(it.getLocation().x(),it.getLocation().y());
 		}
 
-		for(Fruit it: g.fruitArray) 
+		for(Fruit it: fruitArray) 
 		{
 			String date = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(Calendar.getInstance().getTime());
 			long millis = Date2Millis(date);

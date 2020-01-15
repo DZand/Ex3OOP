@@ -39,6 +39,12 @@ public class Robot
 			}
 		}
 
+		public String toJSON() {
+			String ans = "{\"Robot\":{\"id\":" + this._robotKey + "," + "\"value\":" + this._robotValue + "," + "\"src\":" + this._robotSrc
+					+ "," + "\"dest\":" + this._robotDest + "," + "\"speed\":" + this.getSpeed() + "," + "\"pos\":\""
+					+ this._robotLocation.toString() + "\"" + "}" + "}";
+			return ans;
+		}
 	    
 	    public Point3D getLocation() 
 	    {
