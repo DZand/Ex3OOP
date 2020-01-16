@@ -305,7 +305,9 @@ public class MyGameGUI extends JFrame implements ActionListener , MouseListener,
 	                    currGraph.init(Graph_str);
 	                    this.remove(this.manualButton);
 	                    this.remove(this.autoButton);
-	                    game.startGame();
+	                    //game.startGame();
+	                    System.out.println(game.isRunning());
+	                    System.out.println(game.getRobots().size());
 	                    try 
 	        			{
 	        				String info = game.toString();
@@ -335,6 +337,7 @@ public class MyGameGUI extends JFrame implements ActionListener , MouseListener,
 	        			minY = getMinY(listNodes);
 	        			maxY = getMaxY(listNodes);
 	                    drawAutoRobots(getGraphics());
+	                    game.startGame();
 	                    clientThread.start();
 	                    
 	                    repaint();
@@ -697,20 +700,14 @@ public class MyGameGUI extends JFrame implements ActionListener , MouseListener,
 				
 	}
 	
-	private long startGame() 
-	{
-		return this.game.startGame();
-	}
+
 	
 	private long stopGame() 
 	{
 		return this.game.stopGame();
 	}
 	
-	private boolean isRunning() 
-	{
-		return game.isRunning();
-	}
+
 	
 	@Override
 	public void run() 
@@ -723,9 +720,9 @@ public class MyGameGUI extends JFrame implements ActionListener , MouseListener,
 				//synchronized (this)
 				{
 					//timer();
-					game.move();
+					//game.move();
 					repaint();
-					//moveRobots(this.game,this.currGraph);
+					moveRobots(this.game,this.currGraph);
 					Thread.sleep(200);
 					//repaint();
 				}
@@ -734,9 +731,9 @@ public class MyGameGUI extends JFrame implements ActionListener , MouseListener,
 			{
 				throw new RuntimeException("Exception in run time");
 			}
-			JOptionPane.showMessageDialog(null, "GameOver, Final Score is: ");
-	    
+			
 		}
+		JOptionPane.showMessageDialog(null, "GameOver, Final Score is: ");
 		
 	}
 	
