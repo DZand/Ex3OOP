@@ -1,10 +1,12 @@
 package gameClient;
 
 import java.awt.BasicStroke;
+import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
+import java.awt.GridLayout;
 import java.awt.Menu;
 import java.awt.MenuBar;
 import java.awt.MenuItem;
@@ -26,9 +28,11 @@ import java.util.Map;
 import java.util.Random;
 
 import javax.imageio.ImageIO;
+import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JLabel;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -49,80 +53,75 @@ public class MyGameGUI extends JFrame implements ActionListener , MouseListener,
 	public BufferedImage robotImage; //robot icon.
 	public BufferedImage appleImage; 
 	public BufferedImage bannaImage; 
-	public ArrayList<edge_data> eList; //list of lines.
 	public ArrayList<Fruit> fruitArrayList;//list of fruits.
 	public ArrayList<Robot> robotsArrayList;//list of robots.
-	public ArrayList<Point3D> linePoints; //lines pixels list for point 1.
-	public ArrayList<Point3D> linePoints2; //lines pixels list for point 2.
-	public ArrayList<Point3D> robotPoint; //robots pixels list.
-	public ArrayList<Point3D> fruitPoint; //fruits pixel list.
-	public int countRobots; //robot id.
-	public int countFruit; //fruit id.
-	private boolean WhoAreYOU; //if true - draws robot. else - draws fruit.
-	DGraph currGraph;
-	game_service game;
-	String inputTypeGame;
-	static double maxX = Double.NEGATIVE_INFINITY;
-	static double maxY = Double.NEGATIVE_INFINITY;
-	static double minX = Double.POSITIVE_INFINITY;
-	static double minY = Double.POSITIVE_INFINITY;
+	private DGraph currGraph;
+	private game_service game;
+	private String inputTypeGame;
+	private static double maxX = Double.NEGATIVE_INFINITY;
+	private static double maxY = Double.NEGATIVE_INFINITY;
+	private static double minX = Double.POSITIVE_INFINITY;
+	private static double minY = Double.POSITIVE_INFINITY;
 	private final int Offset = 50;
 	private final int xRange = 600;
 	private final int yRange = 600;
+	private int robotsCount;
+	private double epsilon = 0.001;
+	private JLabel timeLable= new JLabel("Timer:");
+	private Boolean PaintRobots;
+	boolean ManuelMode;
+	Thread clientThread;
+	 JButton manualButton, autoButton;
+	 private boolean firstpress=false;
 	
 	
 	public static void main(String[] args) 
 	{
-		game_service game = Game_Server.getServer(4); // this is where we get the user input too know what game to play [0,23];
-		String g = game.getGraph(); // graph as string.
-		DGraph gg = new DGraph();
-		//game.addRobot(1);
-		gg.init(g);
-		//int gameID = 2;
 		MyGameGUI gui = new MyGameGUI();
-		//gui.setVisible(true);
+		gui.setVisible(true);
 	}
 	
 	
 	public MyGameGUI() 
 	{
-		currGraph = new DGraph();
 		init();
 	}
 	
-	public MyGameGUI(int scenario) 
-	{
-		/**
-		game = Game_Server.getServer(scenario);
-		currGraph = new DGraph();
-		currGraph.init(game.getGraph());
-		fruitArrayList= new ArrayList<Fruit>();
-		*/
-		init();
-
-/**
-		if(!game.getFruits().isEmpty())
-		{
-			for (String fruit : game.getFruits()) 
+	  private void init() 
+	  {
+		   
+	        PaintRobots = false;
+	        this.setSize(1300, 700);
+	        setTitle("Best game ever");
+	        this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+	        this.addMouseListener(this);
+			//init picture
+			try 
 			{
-				Fruit currFruit = new Fruit(fruit);
-				currFruit.setEdge(findFruitEdge(currFruit.getLocation()));
-				fruitArrayList.add(currFruit);
-				
+				robotImage = ImageIO.read(new File("C:\\Users\\Danielle2\\Desktop\\Eclipse-workspace\\Ex3OOP\\data\\robot.PNG"));
+				bannaImage = ImageIO.read(new File("C:\\Users\\Danielle2\\Desktop\\Eclipse-workspace\\Ex3OOP\\data\\banana.PNG"));
+				appleImage = ImageIO.read(new File("C:\\Users\\Danielle2\\Desktop\\Eclipse-workspace\\Ex3OOP\\data\\apple.PNG"));
 			}
-		}
-		*/
-		
-	
-		
-		
-		//init();
-		
-	}
-	
-	
+
+			catch (IOException e) 
+			{
+				e.printStackTrace();
+			}
+			
+			
+	        manualButton = new JButton("Manuel Game");
+	        autoButton = new JButton("Auto Game");
+	        manualButton.addActionListener(this);
+	        autoButton.addActionListener(this);
+	        this.getContentPane().setLayout(new GridLayout());
+	        this.getContentPane().add(manualButton);
+	        this.getContentPane().add(autoButton);
+	        clientThread = new Thread(this);
+	    }
+/**
 	public void init() 
 	{
+		//Thread newThread= new Thread(this);
 		JPanel root = new JPanel();
 		this.setSize(1000, 10000);
 		setTitle("Best game ever");
@@ -130,11 +129,20 @@ public class MyGameGUI extends JFrame implements ActionListener , MouseListener,
 		this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		this.setVisible(true);
 		
+		JPanel center = new JPanel();
+		center.setLayout(new BorderLayout());
+		center.add(timeLable, BorderLayout.NORTH);
+		//center.add(timeLable, BorderLayout.NORTH);
+		
 		//run();
 		int scenario=chooseScenario();
 		game = Game_Server.getServer(scenario);
 		currGraph = new DGraph();
 		currGraph.init(game.getGraph());
+		//addManualRobots();
+		//game.startGame();
+		//newThread.start();
+		
 		fruitArrayList= new ArrayList<Fruit>();
 		if(!game.getFruits().isEmpty())
 		{
@@ -145,9 +153,7 @@ public class MyGameGUI extends JFrame implements ActionListener , MouseListener,
 				fruitArrayList.add(currFruit);
 			}
 		}
-		
-		
-		
+
 		//init picture
 		try 
 		{
@@ -160,6 +166,21 @@ public class MyGameGUI extends JFrame implements ActionListener , MouseListener,
 		{
 			e.printStackTrace();
 		}
+		
+		//get robots count for the scenario
+		try 
+		{
+			String info = game.toString();
+			JSONObject line;
+			line = new JSONObject(info);
+			JSONObject obj = line.getJSONObject("GameServer");
+			robotsCount = obj.getInt("robots");
+		}
+		catch (JSONException e)
+		{
+			throw new RuntimeException("parse Json");
+		}
+		
 		
 		MenuBar menuBar = new MenuBar();
 		Menu icons = new Menu("Type"); //Icons - Robot, Fruit.
@@ -204,16 +225,135 @@ public class MyGameGUI extends JFrame implements ActionListener , MouseListener,
 		this.setMenuBar(menuBar);
 
 		//let the player choose the type of the game
-		String[] typeGame = {"Automatic", "by user"};
+		String[] typeGame = {"Automatic", "Manual"};
 		inputTypeGame = (String) JOptionPane.showInputDialog(null, "choose the type of the game: ", "Game type", JOptionPane.QUESTION_MESSAGE,null,typeGame,null);
-		repaint();
-		
+		//repaint();
 	}
+	*/
 	
+	
+	    @Override
+	    public void actionPerformed(ActionEvent actionEvent) 
+	    {
+	        String str = actionEvent.getActionCommand();
+	        if (str.equals("Manuel Game")) 
+	        {
+	            ManuelMode=true;
+	            JFrame start = new JFrame();
+	            try 
+	            {
+	                int level = chooseScenario();
+	                if (level < 0 ) 
+	                {
+	                    JOptionPane.showMessageDialog(start, "Invalid level");
+	                } 
+	                else 
+	                {
+	                    game = Game_Server.getServer(level);
+	                    String Graph_str = game.getGraph();
+	                    currGraph = new DGraph();
+	                    currGraph.init(Graph_str);
+	                    this.remove(this.manualButton);
+	                    this.remove(this.autoButton);
+	                    repaint();
+	                    
+	                    game.startGame();
+	        			//get robots count for the scenario
+	        			try 
+	        			{
+	        				String info = game.toString();
+	        				JSONObject line;
+	        				line = new JSONObject(info);
+	        				JSONObject obj = line.getJSONObject("GameServer");
+	        				robotsCount = obj.getInt("robots");
+	        			}
+	        			catch (JSONException e)
+	        			{
+	        				throw new RuntimeException("parse Json");
+	        			}
+	        			Collection<node_data> listNodes = currGraph.getV();
+	        			minX = getMinX(listNodes);
+	        			maxX = getMaxX(listNodes);
+	        			minY = getMinY(listNodes);
+	        			maxY = getMaxY(listNodes);
+	        			addManualRobots();
+	                    clientThread.start();
+	                }
+	            } 
+	            catch (Exception e) 
+	            {
+	                JOptionPane.showMessageDialog(start, "Invalid Pattern/Not entered any Number");
+	                e.printStackTrace();
+	            }
+	        }
+	        if (str.equals("Auto Game")) 
+	        {
+	            ManuelMode=false;
+	            JFrame start = new JFrame();
+	            try 
+	            {
+	            	int level = chooseScenario();
+	                if (level < 0 ) 
+	                {
+	                    JOptionPane.showMessageDialog(start, "Invalid level");
+	                } 
+	                else 
+	                {
+	                    game = Game_Server.getServer(level);
+	                    String Graph_str = game.getGraph();
+	                    currGraph = new DGraph();
+	                    currGraph.init(Graph_str);
+	                    this.remove(this.manualButton);
+	                    this.remove(this.autoButton);
+	                    game.startGame();
+	                    try 
+	        			{
+	        				String info = game.toString();
+	        				JSONObject line;
+	        				line = new JSONObject(info);
+	        				JSONObject obj = line.getJSONObject("GameServer");
+	        				robotsCount = obj.getInt("robots");
+	        			}
+	        			catch (JSONException e)
+	        			{
+	        				throw new RuntimeException("parse Json");
+	        			}
+	                    
+	                    fruitArrayList= new ArrayList<Fruit>();
+	            		if(!game.getFruits().isEmpty())
+	            		{
+	            			for (String fruit : game.getFruits()) 
+	            			{
+	            				Fruit currFruit = new Fruit(fruit);
+	            				currFruit.setEdge(findFruitEdge(currFruit.getLocation()));
+	            				fruitArrayList.add(currFruit);
+	            			}
+	            		}
+	            		Collection<node_data> listNodes = currGraph.getV();
+	        			minX = getMinX(listNodes);
+	        			maxX = getMaxX(listNodes);
+	        			minY = getMinY(listNodes);
+	        			maxY = getMaxY(listNodes);
+	                    drawAutoRobots(getGraphics());
+	                    clientThread.start();
+	                    
+	                    repaint();
+
+	                }
+	            } 
+	            catch (Exception e) 
+	            {
+	                JOptionPane.showMessageDialog(start, "Invalid Pattern/Not entered any Number");
+	                e.printStackTrace();
+	            }
+	        }
+	    }
+  
+	    /**
 	@Override
 	public void actionPerformed (ActionEvent event) 
 	{
-		/**
+		
 	}
 		String action = event.getActionCommand();
 		switch(action) 
@@ -234,9 +374,9 @@ public class MyGameGUI extends JFrame implements ActionListener , MouseListener,
 				}
 				break;
 		}
-		*/
- }
-	
+		
+ }*/
+	@Override
 	public void paint(Graphics graph) 
 	{
 		super.paint(graph);
@@ -248,11 +388,7 @@ public class MyGameGUI extends JFrame implements ActionListener , MouseListener,
 		}
 		else 
 		{
-			Collection<node_data> listNodes = currGraph.getV();
-			minX = getMinX(listNodes);
-			maxX = getMaxX(listNodes);
-			minY = getMinY(listNodes);
-			maxY = getMaxY(listNodes);
+			
 			//draw nodes
 			for (node_data currNode : currGraph.getV()) 
 			{
@@ -286,12 +422,6 @@ public class MyGameGUI extends JFrame implements ActionListener , MouseListener,
 						
 						graph.setColor(Color.black);
 						graph.drawString(String.valueOf(Math.round((edge.getWeight()*100.0))/100.0), 1+(int)((srcScaleX*0.7)+(0.3*destScaleX)), (int)((srcScaleY*0.7)+(0.3*destScaleY)-2)); 
-						
-						
-						/**
-						graph.fillOval((int)((srcNode.ix()*0.7)+(0.3*destPoint.ix()))+2, (int)((srcNode.iy()*0.7)+(0.3*destPoint.iy())), 9, 9);
-						
-						*/
 					}
 				}	
 			}
@@ -318,64 +448,64 @@ public class MyGameGUI extends JFrame implements ActionListener , MouseListener,
 				
 			}
 		}
-		//draw robots 
-		if (inputTypeGame=="Automatic") 
-		{
-			int rs;
-			try 
-			{
-				String info = game.toString();
-				JSONObject line;
-				line = new JSONObject(info);
-				JSONObject ttt = line.getJSONObject("GameServer");
-				rs = ttt.getInt("robots");
-			}
-			catch (Exception e)
-			{
-				throw new RuntimeException("parse Json");
-			}
-			int numRobot = rs;
-			int numFruit = game.getFruits().size();
-			System.out.println(numRobot);
-			System.out.println(numFruit);
-			int robotKey;
-			for (int i=0;i<numFruit&&numRobot>0;i++) 
-			{
-				if (fruitArrayList.get(i).getType()==1) 
-				{
-					robotKey = fruitArrayList.get(i).getEdge().getSrc();
-				}
-				else 
-				{
-					
-					robotKey = fruitArrayList.get(i).getEdge().getDest();
-				}
-				game.addRobot(robotKey);
-				numRobot--;
-				System.out.println("auto");
-			}
-			if (numRobot>0 && numFruit<=0) 
-			{
-				int random = (int)(Math.random()*currGraph.getV().size());
-				while (!game.getRobots().contains(random) && !currGraph.getV().contains(random)) 
-				{
-					numRobot--;
-					game.addRobot(random);	
-				}
-			}
-			for (String r: game.getRobots()) 
-			{
-				Robot currRobot = new Robot (r);
-				Point3D robotLocation = currRobot.getLocation();
-				double robotScaleX = scale(robotLocation.x() , minX, maxX, Offset, xRange);
-				double robotScaleY = scale(robotLocation.y() , minY, maxY, Offset, yRange);
-				graph.drawImage(robotImage, (int)robotScaleX, (int)robotScaleY, this);
-			}
-		}
-			
-	}
+		
+		 if (PaintRobots) 
+		 {
+        		for (String r: game.getRobots()) 
+        		{
+    
+        			Robot currRobot = new Robot (r);
+        			Point3D robotLocation = currRobot.getLocation();
+        			double robotScaleX = scale(robotLocation.x() , minX, maxX, Offset, xRange);
+        			double robotScaleY = scale(robotLocation.y() , minY, maxY, Offset, yRange);
+        			graph.drawImage(robotImage, (int)robotScaleX, (int)robotScaleY, this);
+        		}
+             }
+         }
 	}
 
+
+	private void drawAutoRobots(Graphics graph)
+	{
+		int numFruit = game.getFruits().size();
+		int robotKey;
+		for (int i=0;i<numFruit&&robotsCount>0;i++) 
+		{
+			if (fruitArrayList.get(i).getType()==1) 
+			{
+				robotKey = fruitArrayList.get(i).getEdge().getSrc();
+			}
+			else 
+			{
+				
+				robotKey = fruitArrayList.get(i).getEdge().getDest();
+			}
+			game.addRobot(robotKey);
+			robotsCount--;
+		}
+		if (robotsCount>0 && numFruit<=0) 
+		{
+			int random = (int)(Math.random()*currGraph.getV().size());
+			while (!game.getRobots().contains(random) && !currGraph.getV().contains(random)) 
+			{
+				robotsCount--;
+				game.addRobot(random);	
+			}
+		}
+		PaintRobots = true;
+	}
+	
+	private void drawManRobots(Graphics graph)
+	{
+		for (String r: game.getRobots()) 
+		{
+			Robot currRobot = new Robot (r);
+			Point3D robotLocation = currRobot.getLocation();
+			double robotScaleX = scale(robotLocation.x() , minX, maxX, Offset, xRange);
+			double robotScaleY = scale(robotLocation.y() , minY, maxY, Offset, yRange);
+			graph.drawImage(robotImage, (int)robotScaleX, (int)robotScaleY, this);
+		}
+	}
 	
 	public int chooseScenario() 
 	{
@@ -398,22 +528,14 @@ public class MyGameGUI extends JFrame implements ActionListener , MouseListener,
 		}
 		else 
 		{
-			game_service game = Game_Server.getServer(scenarioNum); 
-			String graphJson = game.getGraph();
-			//DGraph graphDGraph = new DGraph();
-			//currGraph = new DGraph();
-			//currGraph.init(graphJson);
-			//MyGameGUI gameGraphGui = new MyGameGUI(scenarioNum);
+			//game_service game = Game_Server.getServer(scenarioNum); 
+			//String graphJson = game.getGraph();
 			return scenarioNum;
 		}
 		
 	}
 	
-	public void draw() 
-	{
-		
-	}
-		
+
 	private static int nextNode(graph g, int src) 
 	{
 		int ans = -1;
@@ -440,8 +562,9 @@ public class MyGameGUI extends JFrame implements ActionListener , MouseListener,
 						{
 							Point3D src = this.currGraph.getNode(edge.getSrc()).getLocation();
 							Point3D dest = this.currGraph.getNode(edge.getDest()).getLocation();
-							Double m = (src.y()-dest.y())/(src.x() - dest.x());
-							if (src.y()-fruitPoint.y() == (m * (src.x()-fruitPoint.x())))
+							double edgeDistance = Math.sqrt(Math.pow(src.x()-dest.x(), 2)+Math.pow(src.y()-dest.y(), 2));
+							double fruitDistanceToPoints= Math.sqrt((Math.pow((src.x()-fruitPoint.x()), 2)+Math.pow((src.y()-fruitPoint.y()),2))) + Math.sqrt((Math.pow((fruitPoint.x()-dest.x()), 2)+Math.pow((fruitPoint.y()-dest.y()), 2)));
+							if(Math.abs(fruitDistanceToPoints-edgeDistance)<epsilon)
 							{
 								return edge;
 							}
@@ -543,6 +666,7 @@ public class MyGameGUI extends JFrame implements ActionListener , MouseListener,
 					{	
 						dest = nextNode(gg, src);
 						game.chooseNextEdge(rid, dest);
+						//game.move();
 						System.out.println("Turn to node: "+dest+"  time to end:"+(t/1000));
 						System.out.println(ttt);
 					}
@@ -591,21 +715,31 @@ public class MyGameGUI extends JFrame implements ActionListener , MouseListener,
 	@Override
 	public void run() 
 	{
-		//game.startGame();
+		//timer();
 		while (game!= null && game.isRunning()) 
 		{
 			try 
 			{
-				game.move();
-				Thread.sleep(1000);
-				repaint();
+				//synchronized (this)
+				{
+					//timer();
+					game.move();
+					repaint();
+					//moveRobots(this.game,this.currGraph);
+					Thread.sleep(200);
+					//repaint();
+				}
 			}
 			catch (Exception e)
 			{
 				throw new RuntimeException("Exception in run time");
 			}
-		}	
+			JOptionPane.showMessageDialog(null, "GameOver, Final Score is: ");
+	    
+		}
+		
 	}
+	
 	private void manualMove() 
 	{
 		String inputCurrKey = JOptionPane.showInputDialog("enter sorce key:");
@@ -642,12 +776,126 @@ public class MyGameGUI extends JFrame implements ActionListener , MouseListener,
 		}
 	}
 
+	private void addManualRobots()
+	{
+		for(int i=0; i<robotsCount;i++)
+		{
+			int currNode = -1;
+			try 
+			{
+				String inputCurrKey = JOptionPane.showInputDialog("enter sorce key:");
+				currNode = Integer.parseInt(inputCurrKey);
+				if(currNode==-1|| this.currGraph.getNode(currNode) == null) 
+					{
+						JOptionPane.showMessageDialog(null,"the key doesnt exists");
+					}
+				this.game.addRobot(currNode);
+				PaintRobots = true;
+			}
+			catch (Exception e)
+			{
+				throw new RuntimeException("Invalid key");
+			}
+		}
+		repaint();	
+			
+	}
+	
+
+	private void timer() 
+	{
+		long time = this.game.timeToEnd();
+		if(this.game.isRunning())
+		{
+			timeLable= new JLabel("Time left" + (time/1000));
+			
+			//JOptionPane.showMessageDialog(null, time/1000);
+			//StdDraw.textRight(StdDraw.xmax-0.0005, StdDraw.ymax-0.0005, "" + time/1000);
+		}
+		else 
+		{
+			JOptionPane.showMessageDialog(null, "game over");
+			//StdDraw.textRight(StdDraw.xmax-0.0005, StdDraw.ymax-0.0005, "game over");
+		}
+	}
+	
+	
 	@Override
 	public void mouseClicked(MouseEvent arg0) 
 	{
-		// TODO Auto-generated method stub
-		
+	
+		Robot newRobot = null;
+		if (ManuelMode) 
+		{
+			double x = scale(arg0.getX(),0,1300,0,1300);
+			double y = scale(arg0.getY(),0,700,0,700);
+			//int y = arg0.getY();
+			Point3D mouseClickPoint= new Point3D(x, y);
+			if(!firstpress) 
+				
+			{
+				for (String rob: game.getRobots()) 
+				{
+					newRobot = new Robot(rob);
+					double robotX = scale(newRobot.getLocation().x(),minX, maxX, 50, 1250);
+					double robotY = scale(newRobot.getLocation().y(), minY, maxY, 50, 650);
+                   
+					
+					//if(findPressedNode(mouseClickPoint)!=null) 
+					//{
+						firstpress=true;
+						break;
+					}
+					
+				}
+			}
+			if (firstpress) 
+			{
+				for(edge_data robotEdge: this.currGraph.getE(newRobot.getSrc()))
+				{
+					if(robotEdge.getDest()==newRobot.getDest())
+					//if(findPressedNode(mouseClickPoint)!=null) 
+					{
+						game.chooseNextEdge(newRobot.getKey(), robotEdge.getDest());
+						
+						firstpress=false;
+					//}
+				}
+				
+			}
+		}
 	}
+		
+/**
+		else if(this.robotsArrayList==null)
+		{
+			JOptionPane.showMessageDialog(null, "The is no Robot to move");
+		}
+		
+		if(!canMove && this.robotsArrayList!= null)
+		{
+			JOptionPane.showMessageDialog(null, "The Robot can't move to where you chose");
+		}
+		
+		
+	}*/
+	//return null if user pressed not on a node
+	private node_data findPressedNode(Point3D mouseClickPoint) 
+	{
+		for(node_data currNode: this.currGraph.getV())
+		{
+			double distance= currNode.getLocation().distance3D(mouseClickPoint);
+			if (distance<=epsilon)
+			{
+				node_data ansNode= currNode;
+				return ansNode;
+			}
+		}
+		return null;
+	
+
+	}
+
 
 	@Override
 	public void mouseEntered(MouseEvent arg0) 
@@ -677,4 +925,5 @@ public class MyGameGUI extends JFrame implements ActionListener , MouseListener,
 		
 	}
 		
+	
 }
