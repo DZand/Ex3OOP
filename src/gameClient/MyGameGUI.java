@@ -369,7 +369,11 @@ public class MyGameGUI extends JFrame implements ActionListener , MouseListener,
 	private void drawAutoRobots()
 	{
 		int numFruit = game.getFruits().size();
-		ArrayList<Fruit> fruitsTemp = fruitArrayList;
+		ArrayList<Fruit> fruitsTemp=new ArrayList<Fruit>();
+		for (Fruit f : fruitArrayList) 
+		{
+			fruitsTemp.add(f);
+		}
 		int robotKey=0;
 		Fruit fRemove=null;
 		for (int i =0; i<robotsCount;i++) 
@@ -735,9 +739,7 @@ public class MyGameGUI extends JFrame implements ActionListener , MouseListener,
 	        for (int j = 0; j <fruitArrayList.size() ; j++)
 	        {
 	            edge_data edge=fruitArrayList.get(j).getEdge();
-	            System.out.println("edge: "+edge.getSrc());
 	            double returnshortst = graphAlgo.shortestPathDist(src, edge.getDest());
-	            System.out.println("ahortest: "+returnshortst);
 	            if (returnshortst < shortestpathdist) 
 	            {
 	                try 
