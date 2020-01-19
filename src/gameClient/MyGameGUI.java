@@ -65,6 +65,8 @@ public class MyGameGUI extends JFrame implements ActionListener , MouseListener,
 	public static Graph_Algo algo;
 	public boolean AutoMode=false;
 	public int level;
+	KML_Logger loggerKml;
+	boolean kmlsave;
 	
 	
 	public static void main(String[] args) 
@@ -77,15 +79,16 @@ public class MyGameGUI extends JFrame implements ActionListener , MouseListener,
 	public MyGameGUI() 
 	{
 		init();
-		//KML_Logger kml = new KML_Logger();
-	}
+		KML_Logger.myGameGUI=this;
+		loggerKml = new KML_Logger();
+		 	}
 	
 	public  void guiCreateKML() throws JSONException, ParseException, InterruptedException, IOException 
 	{
-		KML_Logger.createKML(this.game);
+		KML_Logger.createKML(game);
 	}
-
 	
+
 	  private void init() 
 	  {
 		   
@@ -251,7 +254,7 @@ public class MyGameGUI extends JFrame implements ActionListener , MouseListener,
 	        
 	        if(action.equals("Same To KML"))
 	        {
-	        	
+	        	kmlsave=true;
 	        }
 	    }
   
@@ -565,6 +568,25 @@ public class MyGameGUI extends JFrame implements ActionListener , MouseListener,
 						repaint();
 						Thread.sleep(1000);
 					}
+					
+					/**Thread threadKml = new Thread(new Runnable() 
+					 {
+				            @Override
+				            public void run()
+				            {
+				                try 
+				                {
+				                	loggerKml.createKML(game);
+				                }
+
+				                catch (ParseException | InterruptedException | IOException e1) 
+				                {
+				                    e1.printStackTrace();
+				                }
+				            }
+				        });
+				        threadKml.start();*/
+
 				}
 			}
 			catch (Exception e)
@@ -573,7 +595,35 @@ public class MyGameGUI extends JFrame implements ActionListener , MouseListener,
 			}
 			
 		}
+		Object[] option = {"Yes","No"};
 		JOptionPane.showMessageDialog(null, "GameOver, Final Score is: "+ score);
+		int toKML = JOptionPane.showOptionDialog(null, "Game over:\nyou got "+score+" points with "
+				+ "Do you want to save this game to a kml file?","Game over",
+				JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE, null, option,null);
+		if(toKML == 0) {
+			try {
+				KML_Logger.createKML(game);
+			} catch (ParseException | IOException | InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+		/**if (kmlsave) 
+		{
+			try {
+				loggerKml.createKML(game);
+			} catch (ParseException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}*/
+		
 	}
 	
 

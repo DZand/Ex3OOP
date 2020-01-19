@@ -2,12 +2,12 @@ package gameClient;
 
 import java.io.File;
 import java.io.IOException;
-import java.sql.Date;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Locale;
+import java.util.Date;
 
 import de.micromata.opengis.kml.v_2_2_0.Document;
 import de.micromata.opengis.kml.v_2_2_0.Icon;
@@ -29,18 +29,12 @@ public class KML_Logger
 	public static ArrayList<Fruit> fruitArray;
 	public static Document doc;
 	public static int i;
-	
-	public KML_Logger() 
-	{
-		  kml = new Kml ();
-		  doc = kml.createAndSetDocument();
-		  i=0;  
-	}
+	public static MyGameGUI myGameGUI;
 	
 	public static void createKML(game_service g) throws ParseException, IOException, InterruptedException 
 	{
 		Kml kml = new Kml();
-		doc = kml.createAndSetDocument();
+		doc = kml.createAndSetDocument().withName("kml file").withOpen(true);
 		i = 0;
 		MyGameGUI tempGUI = new MyGameGUI();
 		ArrayList<Robot> robotArray = new ArrayList<Robot>();
@@ -71,6 +65,7 @@ public class KML_Logger
 			kmlRobots(robotArray);
 			kmlFruits(fruitArray);
 		}
+		System.out.println("arrived");
 		CreatFile();
 	}
 	
@@ -136,10 +131,11 @@ public class KML_Logger
 	
 	public static void CreatFile() 
 	{
+		System.out.println("here");
 		try 
 		{
 			kml.marshal(new File("running.kml"));
-		    System.out.println("create knl file");
+		    System.out.println("create kml file");
 		}
 		catch (Exception e)
 		{
@@ -157,7 +153,7 @@ public class KML_Logger
 	public static long Date2Millis (String date) throws ParseException 
 	{
 		SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.US);
-		Date time = (Date) format.parse(date.toString());
+		Date time = format.parse(date.toString());
 		long millis = time.getTime();
 		return millis;
 	}
