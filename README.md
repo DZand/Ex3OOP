@@ -9,4 +9,31 @@ and then the game start to play ant the robot start to eat the fruits and get po
 the user choose the level and the user choose where to put the robot on the graph. after all set in the graph the user start to play
 and by click with the mouse on node (must be neighboor of the src node) he make the robot go.
 on the end pf the gane the user get the final points.
+## the final table:
+| level | score |
+| ------| ----  |
+| 0     | 79    |
+| 1     | 79    |
+| 2     |       |
+| 3     |       |
+| 4     |       |
+| 5     |       |
+| 6     |       |
+| 7     |       |
+| 8     |       |
+| 9     |       |
+| 10    |       |
+| 11    |       |
+| 12    |       |
+| 13    |       |
+| 14    |       |
+| 15    |       |
+| 16    |       |
+| 17    |       |
+| 18    | 5     |
+| 19    |       |
+| 19    |       |
+| 19    |       |
+| 19    |       |
+
 
