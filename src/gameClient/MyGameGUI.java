@@ -736,9 +736,11 @@ public class MyGameGUI extends JFrame implements ActionListener , MouseListener,
 	        int key =-1;
 	        double shortestpathdist=Integer.MAX_VALUE;
 	        graphAlgo.init(currGraph);
-	        for (int j = 0; j <fruitArrayList.size() ; j++)
-	        {
-	            edge_data edge=fruitArrayList.get(j).getEdge();
+	        for (String f:game.getFruits()) 
+			{
+				Fruit currFruit = new Fruit(f); 
+				currFruit.setEdge(findFruitEdge(currFruit.getLocation()));
+	            edge_data edge=currFruit.getEdge();
 	            double returnshortst = graphAlgo.shortestPathDist(src, edge.getDest());
 	            if (returnshortst < shortestpathdist) 
 	            {
