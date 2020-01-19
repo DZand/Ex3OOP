@@ -1,7 +1,6 @@
 package gameClient;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.sql.Date;
 import java.text.ParseException;
@@ -11,130 +10,143 @@ import java.util.Calendar;
 import java.util.Locale;
 
 import de.micromata.opengis.kml.v_2_2_0.Document;
+import de.micromata.opengis.kml.v_2_2_0.Icon;
+import de.micromata.opengis.kml.v_2_2_0.IconStyle;
 import de.micromata.opengis.kml.v_2_2_0.Kml;
 import de.micromata.opengis.kml.v_2_2_0.Placemark;
 import de.micromata.opengis.kml.v_2_2_0.TimeSpan;
 
-import Server.Fruit;
-import Server.Game_Server;
-import Server.RobotG;
+
+
+import Server.game_service;
+
 
 public class KML_Logger 
 {
 	
-	public ArrayList<RobotG> robotArray;
+	public static Kml kml;
+	public ArrayList<Robot> robotArray;
 	public static ArrayList<Fruit> fruitArray;
+	public static Document doc;
+	public static int i;
 	
-	
-	public static void createKML(Game_Server g, String f) throws ParseException 
+	public KML_Logger() 
 	{
-
-		ShortestPathAlgo algo = new ShortestPathAlgo();
-		MyGameGUI tempGUI = new MyGameGUI();
-		ArrayList<RobotG> robotArray = new ArrayList<RobotG>();
-		ArrayList<RobotG> robotArray2 = new ArrayList<RobotG>();
-		try 
-		{
-			robotArray = tempGUI.nearestFruits(g);
-		} 
-		catch (IOException e1) 
-		{
-			e1.printStackTrace();
-		}
-
+		  kml = new Kml ();
+		  doc = kml.createAndSetDocument();
+		  i=0;  
+	}
+	
+	public static void createKML(game_service g) throws ParseException, IOException, InterruptedException 
+	{
 		Kml kml = new Kml();
-		Document doc = kml.createAndSetDocument();
-
-		RobotG pac = new RobotG(robotArray.get(robotArray.size()-1));
-		boolean flag = true;
-		int arr[] = new int[g.getRobots().size()];
-		int ind = 0;
-		robotArray2.add(pac);
-		for (int i = robotArray.size()-1; i >= 0; i--) 
+		doc = kml.createAndSetDocument();
+		i = 0;
+		MyGameGUI tempGUI = new MyGameGUI();
+		ArrayList<Robot> robotArray = new ArrayList<Robot>();
+		ArrayList<Fruit> fruitArray = new ArrayList<Fruit>();
+		if(!g.getFruits().isEmpty())
 		{
-			for (int j = 0; j < robotArray2.size(); j++)
+			for(String fruit: g.getFruits())
 			{
-				if(robotArray.get(i).getID() == robotArray2.get(j).getID()) 
-				{
-					flag = false;
-					break;	
-				}
+				Fruit currFruit = new Fruit(fruit);
+				currFruit.setEdge(tempGUI.findFruitEdge(currFruit.getLocation()));
+				fruitArray.add(currFruit);	
 			}
-			if(flag == true) 
+		}
+		if(!g.getRobots().isEmpty())
+		{
+			for(String robot: g.getRobots())
 			{
-				robotArray2.add(robotArray.get(i));
-				arr[ind] = i;
-				ind++;
+				Robot currRobot = new Robot(robot);
+				robotArray.add(currRobot);	
 			}
-			flag = true;
 		}
-		for (int i = 0; i < arr.length; i++) 
+		
+		
+		while(g.isRunning())
 		{
-			robotArray.remove(arr[i]);
+			Thread.sleep(200);
+			i++;
+			kmlRobots(robotArray);
+			kmlFruits(fruitArray);
 		}
-
-		for(RobotG it: robotArray2) 
+		CreatFile();
+	}
+	
+	public static void kmlRobots(ArrayList<Robot> robotArray) throws ParseException
+	{
+		for(Robot robot: robotArray)
 		{
-			String date = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(Calendar.getInstance().getTime());
-//			long millis = Date2Millis(date);
-			Placemark p = doc.createAndAddPlacemark();
-//			TimeSpan s = p.createAndSetTimeSpan();
-//			String str = Millis2Date(millis+(long)(it.getTime())*1000);
-//			String[] strA = str.split(" ");
-//			str = strA[0] + "T" + strA[1]+"Z"; 
-//			s.setBegin(str);
-			p.withDescription("Mac: " + it.getID() + "\nType: RobotG")
-			.withOpen(Boolean.TRUE).createAndSetPoint().
-			addToCoordinates(it.getLocation().x(),it.getLocation().y());
-		}
-
-		for (RobotG it: robotArray) 
-		{ 
-			Placemark p = doc.createAndAddPlacemark();
-			String date = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(Calendar.getInstance().getTime());
-			long millis = Date2Millis(date);
-			millis += it.getTime()*100;
-			date = Millis2Date(millis);
-			String date1 = Millis2Date(Date2Millis(date)+1000);
-			String[] date2 = date.split(" ");
-			date = date2[0]+'T'+date2[1]+'Z';
-			String[] date3 = date1.split(" ");
-			date1 = date3[0]+'T'+date3[1]+'Z';
-			TimeSpan s = p.createAndSetTimeSpan();
-			s.setBegin(date);
-			s.setEnd(date1);
-			p.withDescription("Mac: " + it.getID() + "\nType: RobotG")
-			.withOpen(Boolean.TRUE).createAndSetPoint().
-			addToCoordinates(it.getLocation().x(),it.getLocation().y());
-		}
-
-		for(Fruit it: fruitArray) 
-		{
-			String date = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(Calendar.getInstance().getTime());
-			long millis = Date2Millis(date);
-			Placemark p = doc.createAndAddPlacemark();
-			TimeSpan s = p.createAndSetTimeSpan();
-			String str = Millis2Date(millis+(long)(it.endTime)*1000);
-			String[] strA = str.split(" ");
-			str = strA[0] + "T" + strA[1]+"Z"; 
-			s.setEnd(str);
-			p.withDescription("Mac: " + it.getID() + "\nType: fruit")
-			.withOpen(Boolean.TRUE).createAndSetPoint().
-			addToCoordinates(it.getLocation().x(),it.getLocation().y());
-		}
-
-		try 
-		{
-			kml.marshal(new File(f));
-			/**
-			 * write to kml file.
-			 */
-		}
-		catch (FileNotFoundException e) 
-		{
-			e.printStackTrace();
+			  Icon ff = new Icon().withHref("http://maps.google.com/mapfiles/kml/shapes/parking_lot.png");
+			  Placemark plmark = doc.createAndAddPlacemark();
+              ff.setViewBoundScale(1);
+              ff.setViewRefreshTime(1);
+              ff.withRefreshInterval(1);
+              IconStyle pp = new IconStyle();
+              pp.setScale(1);
+              pp.setHeading(1);
+              pp.setColor("ff007db3");
+              pp.setIcon(ff);
+              plmark.createAndAddStyle().setIconStyle(pp);
+              plmark.withDescription("Mac: " + "\nType: CAR").withOpen(Boolean.TRUE).createAndSetPoint().addToCoordinates(robot.getLocation().x(), robot.getLocation().y());
+              String time1 = Millis2Date(Date2Millis(TimeNow()) + i * 1000);
+              String time2 = Millis2Date(Date2Millis(TimeNow()) + (i + 1) * 1000);
+              String[] aa = time1.split(" ");
+              time1 = aa[0] + "T" + aa[1] + "Z";
+              String[] bb = time2.split(" ");
+              time2 = bb[0] + "T" + bb[1] + "Z";
+              TimeSpan a = plmark.createAndSetTimeSpan();
+              a.setBegin(time1);
+              a.setEnd(time2);
+              
 		}
 	}
+	
+	public static void kmlFruits(ArrayList<Fruit> fruitArray) throws ParseException
+	{
+		for(Fruit fruit: fruitArray)
+		{
+		    Placemark placmark = doc.createAndAddPlacemark();
+            Icon ff = new Icon();
+
+            ff.setHref("https://img.favpng.com/0/3/15/super-mario-odyssey-super-mario-bros-luigi-mushroom-png-favpng-qEkUCTh1rLw3PeUCFxR7x3YKb.jpg");
+            ff.setViewBoundScale(1);
+            ff.setViewRefreshTime(1);
+            ff.withRefreshInterval(1);
+            IconStyle pp = new IconStyle();
+            pp.setScale(1);
+            pp.setHeading(1);
+            pp.setColor("ff007db3");
+            pp.setIcon(ff);
+            placmark.createAndAddStyle().setIconStyle(pp);
+            placmark.withDescription("MAC: " + "\nType: FRUIT").withOpen(Boolean.TRUE).createAndSetPoint().addToCoordinates(fruit.getLocation().x(), fruit.getLocation().y());
+            String time1 = Millis2Date(Date2Millis(TimeNow()) + i * 1000);
+            String time2 = Millis2Date(Date2Millis(TimeNow()) + (i + 1) * 1000);
+            String[] aa = time1.split(" ");
+            time1 = aa[0] + "T" + aa[1] + "Z";
+            String[] bb = time2.split(" ");
+            time2 = bb[0] + "T" + bb[1] + "Z";
+            TimeSpan b = placmark.createAndSetTimeSpan();
+            b.setBegin(time1);
+            b.setEnd(time2);
+		}
+	}
+	
+	
+	public static void CreatFile() 
+	{
+		try 
+		{
+			kml.marshal(new File("running.kml"));
+		    System.out.println("create knl file");
+		}
+		catch (Exception e)
+		{
+		    System.out.println("Fail create");
+		}
+	}
+	
 
 	/**
 	 * This function converse a String date to milliseconds.
@@ -160,4 +172,9 @@ public class KML_Logger
 		SimpleDateFormat date = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 		return date.format(new Date(millis));
 	}
+	
+	private static String TimeNow()
+	{
+	    return new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(Calendar.getInstance().getTime());
+    }
 }
