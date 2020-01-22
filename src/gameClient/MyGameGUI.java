@@ -22,6 +22,7 @@ import java.util.Collection;
 import java.util.List;
 
 import javax.imageio.ImageIO;
+import javax.management.RuntimeErrorException;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 
@@ -38,6 +39,7 @@ import algorithms.*;
 import gameClient.KML_Logger;
 
 
+
 public class MyGameGUI extends JFrame implements ActionListener , MouseListener, Runnable 
 {
 	public BufferedImage robotImage; //robot icon.
@@ -46,7 +48,7 @@ public class MyGameGUI extends JFrame implements ActionListener , MouseListener,
 	public ArrayList<Fruit> fruitArrayList;//list of fruits.
 	public ArrayList<Robot> robotsArrayList;//list of robots.
 	private DGraph currGraph;
-	private game_service game;
+	public static game_service game;
 	private static double maxX = Double.NEGATIVE_INFINITY;
 	private static double maxY = Double.NEGATIVE_INFINITY;
 	private static double minX = Double.POSITIVE_INFINITY;
@@ -57,7 +59,7 @@ public class MyGameGUI extends JFrame implements ActionListener , MouseListener,
 	private int robotsCount;
 	private double epsilon = 0.001;
 	private Boolean PaintRobots;
-	boolean ManuelMode;
+	boolean manualMode;
 	Thread clientThread;
 	private boolean firstpress=false;
 	private static DecimalFormat df2 = new DecimalFormat("#.##");
@@ -65,8 +67,6 @@ public class MyGameGUI extends JFrame implements ActionListener , MouseListener,
 	public static Graph_Algo algo;
 	public boolean AutoMode=false;
 	public int level;
-	KML_Logger loggerKml;
-	boolean kmlsave;
 	
 	
 	public static void main(String[] args) 
@@ -79,15 +79,7 @@ public class MyGameGUI extends JFrame implements ActionListener , MouseListener,
 	public MyGameGUI() 
 	{
 		init();
-		KML_Logger.myGameGUI=this;
-		loggerKml = new KML_Logger();
-		 	}
-	
-	public  void guiCreateKML() throws JSONException, ParseException, InterruptedException, IOException 
-	{
-		KML_Logger.createKML(game);
 	}
-	
 
 	  private void init() 
 	  {
@@ -113,28 +105,14 @@ public class MyGameGUI extends JFrame implements ActionListener , MouseListener,
 			MenuBar menuBar = new MenuBar();
 			Menu type = new Menu("Type");
 			menuBar.add(type);
-			
-			Menu save = new Menu("Save");
-			menuBar.add(save);
-			
 			MenuItem auto = new MenuItem("Auto Game");
 			auto.addActionListener(this);
-			
-			MenuItem manuel = new MenuItem("Manuel Game");
-			manuel.addActionListener(this);
-			
+			MenuItem manual = new MenuItem("manual Game");
+			manual.addActionListener(this);
 			type.add(auto);
-			type.add(manuel);
-			
-			MenuItem saveKml = new MenuItem("Save To KML");
-			saveKml.addActionListener(this);
-			
-			save.add(saveKml);
-			
+			type.add(manual);
 			this.setMenuBar(menuBar);
-			
 			this.addMouseListener(this);
-
 	        clientThread = new Thread(this);
 	    }
 
@@ -143,9 +121,9 @@ public class MyGameGUI extends JFrame implements ActionListener , MouseListener,
 	    public void actionPerformed(ActionEvent event) 
 	    {
 	        String action = event.getActionCommand();
-	        if (action.equals("Manuel Game")) 
+	        if (action.equals("manual Game")) 
 	        {
-	            ManuelMode=true;
+	            manualMode=true;
 	            JFrame start = new JFrame();
 	            try 
 	            {
@@ -182,8 +160,25 @@ public class MyGameGUI extends JFrame implements ActionListener , MouseListener,
 	                    repaint();
 	        			addManualRobots();
 	        			game.startGame();
+	        			
+	        			//open kml thread to save data during game
+	        			Thread kmlThread = new Thread(new Runnable() 
+	        			{
+	        	            @Override
+	        	            public void run() 
+	        	            {
+	        	                try
+	        	                {
+	        	                	KML_Logger.createKML(game);
+	        	                }
+	        	                catch (ParseException | InterruptedException | IOException e)
+	        	                {
+	        	                	throw new RuntimeErrorException(null, "Error running kmlThread");
+	        	                }
+	        	            }
+	        	        });
+	        			kmlThread.start();
 	        			clientThread.start();
-	                    
 	                }
 	            } 
 	            catch (Exception e) 
@@ -194,7 +189,7 @@ public class MyGameGUI extends JFrame implements ActionListener , MouseListener,
 	        }
 	        if (action.equals("Auto Game")) 
 	        {
-	            ManuelMode=false;
+	            manualMode=false;
 	            JFrame start = new JFrame();
 	            try 
 	            {
@@ -240,21 +235,32 @@ public class MyGameGUI extends JFrame implements ActionListener , MouseListener,
 	                    drawAutoRobots();
 	                    PaintRobots=true;
 	                    game.startGame();
+	                    
+	                  //open kml thread to save data during game
+	                	Thread kmlThread = new Thread(new Runnable() 
+	        			{
+	        	            @Override
+	        	            public void run() 
+	        	            {
+	        	                try
+	        	                {
+	        	                	KML_Logger.createKML(game);
+	        	                }
+	        	                catch (ParseException | InterruptedException | IOException e)
+	        	                {
+	        	                	throw new RuntimeErrorException(null, "Error running kmlThread");
+	        	                }
+	        	            }
+	        	        });
+	                	kmlThread.start();
 	                    clientThread.start();
-	                    //repaint();
 
 	                }
 	            } 
 	            catch (Exception e) 
 	            {
 	                JOptionPane.showMessageDialog(start, "Error in automatic game");
-	                e.printStackTrace();
 	            }
-	        }
-	        
-	        if(action.equals("Same To KML"))
-	        {
-	        	kmlsave=true;
 	        }
 	    }
   
@@ -298,11 +304,11 @@ public class MyGameGUI extends JFrame implements ActionListener , MouseListener,
 	                     g2.drawLine((int) srcScaleXNode, (int) srcScaleYNode, (int) destScaleX, (int) destScaleY);
 
 	                     graph.setColor(Color.BLACK);
-	                        int directed_x = (int) (srcScaleXNode * 0.15 + destScaleX * 0.85);
-	                        int directed_y = (int) (srcScaleYNode * 0.15 + destScaleY * 0.85);
-	                        graph.fillOval(directed_x - 4, directed_y - 2, 7, 7);
-	                        graph.setColor(Color.DARK_GRAY);
-	                        graph.drawString("" + df2.format(edge.getWeight()), directed_x, directed_y);
+	                     int directed_x = (int) (srcScaleXNode * 0.15 + destScaleX * 0.85);
+	                     int directed_y = (int) (srcScaleYNode * 0.15 + destScaleY * 0.85);
+	                     graph.fillOval(directed_x - 4, directed_y - 2, 7, 7);
+	                     graph.setColor(Color.DARK_GRAY);
+	                     graph.drawString("" + df2.format(edge.getWeight()), directed_x, directed_y);
 				}
 				}	
 			}
@@ -331,7 +337,7 @@ public class MyGameGUI extends JFrame implements ActionListener , MouseListener,
 				
 			}
 		}
-		
+		//draw robots
 		 if (PaintRobots) 
 		 {
         		for (String r: game.getRobots()) 
@@ -347,11 +353,12 @@ public class MyGameGUI extends JFrame implements ActionListener , MouseListener,
 		 //draw timer
 		 timer(graph);
 		 //calculate score
-		 calcScore();
+		 calcScore(graph);
        }
 	}
 	
-	private void calcScore()
+	//calculate score and display on gui
+	private void calcScore(Graphics graph)
 	{
 		 try 
          {
@@ -359,6 +366,7 @@ public class MyGameGUI extends JFrame implements ActionListener , MouseListener,
              JSONObject line = new JSONObject(info);
              JSONObject GameServer = line.getJSONObject("GameServer");
              score = GameServer.getInt("grade");
+             graph.drawString("Score: "+ score, (int)minX+1000,(int)maxY+200);
          }
          catch (JSONException e) 
          {
@@ -366,6 +374,7 @@ public class MyGameGUI extends JFrame implements ActionListener , MouseListener,
          } 
 	}
 	
+	//draw robots in automatic game
 	private void drawAutoRobots()
 	{
 		int numFruit = game.getFruits().size();
@@ -440,7 +449,7 @@ public class MyGameGUI extends JFrame implements ActionListener , MouseListener,
 	}
 	
 
-
+	//find onn which edge the fruit is on
 	public edge_data findFruitEdge (Point3D fruitPoint) 
 	{
 		if(this.currGraph != null) 
@@ -534,19 +543,31 @@ public class MyGameGUI extends JFrame implements ActionListener , MouseListener,
 	                int rid = ttt.getInt("id");
 	                int src = ttt.getInt("src");
 	                int dest = ttt.getInt("dest");
-	                if(dest==-1) {
-	                    dest = nextNode(src,game);
+	                if(dest==-1) 
+	                {
+	                	try
+	                	{
+	                		dest = nextNode(src,game);
+	                	}
+	                	catch(Exception e)
+	                	{
+	                		throw new RuntimeException("Error in nextNode function");
+	                	}
+	                    
 	                    game.chooseNextEdge(rid, dest);
 	                }
 	                game.move();
 	            }
-	            catch (JSONException e) {e.printStackTrace();}
+	            catch (JSONException e) 
+	            {
+	            	throw new RuntimeException("Error in moveRobots function");
+	            }
 	        }
 		 }
 	}
 
 
-
+	//game thread to update the gui during game
 	@Override
 	public void run() 
 	{
@@ -555,42 +576,20 @@ public class MyGameGUI extends JFrame implements ActionListener , MouseListener,
 			try 
 			{
 				{
-					if(ManuelMode==false)
+					if(manualMode==false)
 					{
 						repaint();
 						moveRobots(this.game,this.currGraph);
 						game.move();
-						//moveRobots(this.game,this.currGraph);
-						//game.move();
-						//repaint();
 						Thread.sleep(1000);
 						
 					}
-					else if(ManuelMode==true)
+					else if(manualMode==true)
 					{
 						game.move();
 						repaint();
 						Thread.sleep(1000);
 					}
-					
-					/**Thread threadKml = new Thread(new Runnable() 
-					 {
-				            @Override
-				            public void run()
-				            {
-				                try 
-				                {
-				                	loggerKml.createKML(game);
-				                }
-
-				                catch (ParseException | InterruptedException | IOException e1) 
-				                {
-				                    e1.printStackTrace();
-				                }
-				            }
-				        });
-				        threadKml.start();*/
-
 				}
 			}
 			catch (Exception e)
@@ -598,40 +597,11 @@ public class MyGameGUI extends JFrame implements ActionListener , MouseListener,
 				throw new RuntimeException("Exception in run time");
 			}
 			
-		}
-		Object[] option = {"Yes","No"};
-		JOptionPane.showMessageDialog(null, "GameOver, Final Score is: "+ score);
-		int toKML = JOptionPane.showOptionDialog(null, "Game over:\nyou got "+score+" points with "
-				+ "Do you want to save this game to a kml file?","Game over",
-				JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE, null, option,null);
-		if(toKML == 0) {
-			try {
-				KML_Logger.createKML(game);
-			} catch (ParseException | IOException | InterruptedException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-		}
-		/**if (kmlsave) 
-		{
-			try {
-				loggerKml.createKML(game);
-			} catch (ParseException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} catch (InterruptedException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-		}*/
-		
+		}		
 	}
 	
 
-
+	//Possibility to draw robots manually by user 
 	private void addManualRobots()
 	{
 		for(int i=0; i<robotsCount;i++)
@@ -657,19 +627,19 @@ public class MyGameGUI extends JFrame implements ActionListener , MouseListener,
 			
 	}
 	
-
+	//draw timer on gui
 	private void timer(Graphics graph) 
 	{
 		 graph.drawString("TIME TO END: "+ (int)(game.timeToEnd()/1000), (int)minX+1000,(int)maxY+100);
 	}
 	
 
-	
+	//listen to mouse clicks on manual game
 	 public void mouseClicked(MouseEvent e1) 
 	 {
 		 Robot newRobot = null;
 		 boolean canMove=false;
-	        if(ManuelMode)
+	        if(manualMode)
 	        {
 	            if(game.getRobots().size()==1)
 	            {
@@ -747,18 +717,23 @@ public class MyGameGUI extends JFrame implements ActionListener , MouseListener,
 	                try 
 	                {
 	                    shortestpathdist = graphAlgo.shortestPathDist(src, edge.getDest());
-	                    key = graphAlgo.shortestPath(src, edge.getDest()).get(1).getKey();
+	                    if(graphAlgo.shortestPath(src, edge.getDest()).size()==1)
+	                    {
+	                    	key=edge.getSrc();
+	                    }
+	                    else
+	                    {
+		                    key = graphAlgo.shortestPath(src, edge.getDest()).get(1).getKey();
+	                    }
 	                }
 	                catch (Exception e)
 	                {
-	                    key=edge.getSrc();
+	                    throw new RuntimeException("Exception in algo calculation");
 	                }
 	            }
 	        }
 	        return key;
 	    }
-	 
-
 
 	@Override
 	public void mouseEntered(MouseEvent arg0) 
