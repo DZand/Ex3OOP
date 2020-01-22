@@ -46,7 +46,6 @@ public class MyGameGUI extends JFrame implements ActionListener , MouseListener,
 	public BufferedImage appleImage; 
 	public BufferedImage bannaImage; 
 	public ArrayList<Fruit> fruitArrayList;//list of fruits.
-	public ArrayList<Robot> robotsArrayList;//list of robots.
 	private DGraph currGraph;
 	public static game_service game;
 	private static double maxX = Double.NEGATIVE_INFINITY;
@@ -64,9 +63,7 @@ public class MyGameGUI extends JFrame implements ActionListener , MouseListener,
 	private boolean firstpress=false;
 	private static DecimalFormat df2 = new DecimalFormat("#.##");
 	private static int score=0;
-	public static Graph_Algo algo;
-	public boolean AutoMode=false;
-	public int level;
+	public static int level;
 	
 	
 	public static void main(String[] args) 
@@ -85,7 +82,7 @@ public class MyGameGUI extends JFrame implements ActionListener , MouseListener,
 	  {
 		   
 	        PaintRobots = false;
-	        this.setSize(1700, 10000);
+	        this.setSize(10000, 10000);
 	        setTitle("Best game ever");
 	        this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 	        this.addMouseListener(this);
@@ -120,11 +117,22 @@ public class MyGameGUI extends JFrame implements ActionListener , MouseListener,
 	    @Override
 	    public void actionPerformed(ActionEvent event) 
 	    {
-	        String action = event.getActionCommand();
+	    	JFrame start = new JFrame();
+	    	String action = event.getActionCommand();
 	        if (action.equals("manual Game")) 
 	        {
-	            manualMode=true;
-	            JFrame start = new JFrame();
+	        	manualMode=true;
+	        	//String idUser = JOptionPane.showInputDialog(start,"please enter your id: ");
+	        	try 
+	        	{
+	        		//int id = Integer.parseInt(idUser);
+	        		//Game_Server.login(id);
+	        		Game_Server.login(209005495);
+	        	}
+	        	catch (Exception e) 
+	        	{
+	        		throw new RuntimeException("Invalid Id");
+	        	} 
 	            try 
 	            {
 	                level = chooseScenario();
@@ -189,8 +197,20 @@ public class MyGameGUI extends JFrame implements ActionListener , MouseListener,
 	        }
 	        if (action.equals("Auto Game")) 
 	        {
-	            manualMode=false;
-	            JFrame start = new JFrame();
+	        	manualMode=false;
+	            //String idUser = JOptionPane.showInputDialog(start,"please enter your id: ");
+	        	
+	        	try 
+	        	{
+	        		//int id = Integer.parseInt(idUser);
+	        		//Game_Server.login(id);
+	        		Game_Server.login(209005495);
+	        	}
+	        	catch (Exception e) 
+	        	{
+	        		throw new RuntimeException("Invalid Id");
+	        	} 
+	            
 	            try 
 	            {
 	            	level = chooseScenario();
@@ -264,6 +284,11 @@ public class MyGameGUI extends JFrame implements ActionListener , MouseListener,
 	        }
 	    }
   
+	public static int getLevel() 
+	{
+		return level;
+	}    
+	    
 	@Override
 	public void paint(Graphics graph) 
 	{
@@ -531,30 +556,30 @@ public class MyGameGUI extends JFrame implements ActionListener , MouseListener,
 	public void moveRobots(game_service game , DGraph g) 
 	{
 	    List<String> log = game.move();
-	    if(log!=null) {
-	    	long t = game.timeToEnd();
+	    if(log!=null) 
+	    {
 	        for(int i=0;i<log.size();i++) 
 	        {
 	            String robot_json = log.get(i);
 	            try 
 	            {
 	                JSONObject line = new JSONObject(robot_json);
-	                JSONObject ttt = line.getJSONObject("Robot");
-	                int rid = ttt.getInt("id");
-	                int src = ttt.getInt("src");
-	                int dest = ttt.getInt("dest");
-	                if(dest==-1) 
+	                JSONObject obj = line.getJSONObject("Robot");
+	                int robotId = obj.getInt("id");
+	                int robotSrc = obj.getInt("src");
+	                int robotDest = obj.getInt("dest");
+	                if(robotDest==-1) 
 	                {
 	                	try
 	                	{
-	                		dest = nextNode(src,game);
+	                		robotDest = nextNode(robotSrc,game);
 	                	}
 	                	catch(Exception e)
 	                	{
 	                		throw new RuntimeException("Error in nextNode function");
 	                	}
 	                    
-	                    game.chooseNextEdge(rid, dest);
+	                    game.chooseNextEdge(robotId, robotDest);
 	                }
 	                game.move();
 	            }
@@ -635,22 +660,22 @@ public class MyGameGUI extends JFrame implements ActionListener , MouseListener,
 	
 
 	//listen to mouse clicks on manual game
-	 public void mouseClicked(MouseEvent e1) 
+	 public void mouseClicked(MouseEvent clickPoint) 
 	 {
 		 Robot newRobot = null;
 		 boolean canMove=false;
+		 double clickPointY=clickPoint.getY();
+         double clickPointX=clickPoint.getX();
 	        if(manualMode)
 	        {
 	            if(game.getRobots().size()==1)
 	            {
 	                Robot r = new Robot(game.getRobots().get(0));
-	                double e1_get_y=e1.getY();
-	                double e1_get_x=e1.getX();
 	                for (edge_data ed : currGraph.getE(r.getSrc())) 
 	                {
-	                    double ndlocationX = scale(currGraph.getNode(ed.getDest()).getLocation().x(), minX, maxX, 0+Offset, (double)xRange);
-	                    double ndlocationY = scale(currGraph.getNode(ed.getDest()).getLocation().y(), minY, maxY,  0+Offset, (double)yRange);
-	                    if (Math.abs(e1_get_x - ndlocationX) < 25 && Math.abs(e1_get_y - ndlocationY) < 25) 
+	                    double nodePointX = scale(currGraph.getNode(ed.getDest()).getLocation().x(), minX, maxX, 0+Offset, (double)xRange);
+	                    double nodePointY = scale(currGraph.getNode(ed.getDest()).getLocation().y(), minY, maxY,  0+Offset, (double)yRange);
+	                    if (Math.abs(clickPointX - nodePointX) < 25 && Math.abs(clickPointY - nodePointY) < 25) 
 	                    {
 	                        game.chooseNextEdge(0, ed.getDest());
 	                        canMove=true;
@@ -664,11 +689,9 @@ public class MyGameGUI extends JFrame implements ActionListener , MouseListener,
 	                    for (int i = 0; i < game.getRobots().size(); i++) 
 	                    {
 	                    	newRobot = new Robot(game.getRobots().get(i));
-	                        double RobotlocationX = scale(currGraph.getNode(newRobot.getSrc()).getLocation().x(), minX, maxX, 0+Offset, (double)xRange);
-	                        double RobotlocationY = scale(currGraph.getNode(newRobot.getSrc()).getLocation().y(),  minY, maxY,  0+Offset, (double)yRange);
-	                        double e1_get_y=e1.getY();
-	    	                double e1_get_x=e1.getX();
-	                        if (Math.abs(RobotlocationX - e1_get_x) < 35 && Math.abs(RobotlocationY - e1_get_y) < 35) 
+	                        double robotPointX = scale(currGraph.getNode(newRobot.getSrc()).getLocation().x(), minX, maxX, 0+Offset, (double)xRange);
+	                        double robotPointY = scale(currGraph.getNode(newRobot.getSrc()).getLocation().y(),  minY, maxY,  0+Offset, (double)yRange);
+	                        if (Math.abs(robotPointX - clickPointX) < 35 && Math.abs(robotPointY - clickPointY) < 35) 
 	                        {
 	                            firstpress = true;
 	                            break;
@@ -677,15 +700,13 @@ public class MyGameGUI extends JFrame implements ActionListener , MouseListener,
 	                }
 	                if (firstpress) 
 	                {
-	                	double e1_get_y=e1.getY();
-    	                double e1_get_x=e1.getX();
-	                    for (edge_data ed : currGraph.getE(newRobot.getSrc())) 
+	                    for (edge_data currEdge : currGraph.getE(newRobot.getSrc())) 
 	                    {
-	                        double ndlocationX = scale(currGraph.getNode(ed.getDest()).getLocation().x(), minX, maxX, 0+Offset, (double)yRange);
-	                        double ndlocationY = scale(currGraph.getNode(ed.getDest()).getLocation().y(), minY, maxY, 0+Offset, (double)xRange);
-	                        if (Math.abs(e1_get_x - ndlocationX) < 25 && Math.abs(e1_get_y - ndlocationY) < 25) 
+	                        double nodePointX = scale(currGraph.getNode(currEdge.getDest()).getLocation().x(), minX, maxX, 0+Offset, (double)yRange);
+	                        double nodePointY = scale(currGraph.getNode(currEdge.getDest()).getLocation().y(), minY, maxY, 0+Offset, (double)xRange);
+	                        if (Math.abs(clickPointX - nodePointX) < 25 && Math.abs(clickPointY - nodePointY) < 25) 
 	                        {
-	                            game.chooseNextEdge(newRobot.getKey(), ed.getDest());
+	                            game.chooseNextEdge(newRobot.getKey(), currEdge.getDest());
 	                            firstpress = false;
 	                            canMove=true;
 	                        }
@@ -735,6 +756,7 @@ public class MyGameGUI extends JFrame implements ActionListener , MouseListener,
 	        return key;
 	    }
 
+	
 	@Override
 	public void mouseEntered(MouseEvent arg0) 
 	{

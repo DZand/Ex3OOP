@@ -37,7 +37,8 @@ import java.util.Locale;
 
 
 import java.io.IOException;
-
+import java.nio.file.Files;
+import java.nio.file.Paths;
 
 import javax.swing.JOptionPane;
 
@@ -46,13 +47,8 @@ import Server.game_service;
 
 public class KML_Logger 
 {
-	//File f = new File("kmlFile.kml");
-	//static Kml kmlDoc = new Kml(); // new KML_DOC
-    //Document docNew = kmlDoc.createAndSetDocument(); // new DOC
 	public static ArrayList<Robot> robotArray;
 	public static ArrayList<Fruit> fruitArray;
-    
-	//public static Kml kml;
 
 	public static Document doc;
 	public static int c;
@@ -72,12 +68,7 @@ public class KML_Logger
         String temp= arr[0] + "T" + arr[1] + "Z";
         return temp;
     }
-	/**
-    public static String splitArr(String[] arr)
-    {
-        String temp= arr[0] + "|" + arr[1] + "|";
-        return temp;
-    }*/
+
     
     
     /**
@@ -93,7 +84,6 @@ public class KML_Logger
 	{
 		Kml kmldoc = new Kml();
 		doc = kmldoc.createAndSetDocument();
-				//.withName("kml file").withOpen(true);
 		c = 0;
 		MyGameGUI tempGUI = new MyGameGUI();
 			
@@ -133,8 +123,10 @@ public class KML_Logger
 	            int s = JOptionPane.showConfirmDialog(null,"GameOver, Do you want to save the game to KML?","Please choose Yes/No",JOptionPane.YES_NO_OPTION);
 	            if(s==0)
 	            {
-	            	File f= new File("kmlFile.kml");
+	            	File f= new File("kmlFile" + MyGameGUI.getLevel()+".kml");
 	            	kmldoc.marshal(f);
+	                String kmlString =  new String(Files.readAllBytes(Paths.get(f.getName())));
+	                game.sendKML(kmlString);
 	            }	            	
 	        }
 	        catch (Exception e)
@@ -178,7 +170,6 @@ public class KML_Logger
 		{
 			Placemark f_mark = doc1.createAndAddPlacemark();
             Icon f_icon = new Icon();
-           // f_icon.setHref("apple.png");
             //banana
             if(fruit.getType()==1)
             {
