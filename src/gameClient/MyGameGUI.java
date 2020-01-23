@@ -65,6 +65,7 @@ public class MyGameGUI extends JFrame implements ActionListener , MouseListener,
 	private static int score=0;
 	private static int moves=0;
 	public static int level;
+	public static int id;
 	
 	
 	public static void main(String[] args) 
@@ -123,12 +124,12 @@ public class MyGameGUI extends JFrame implements ActionListener , MouseListener,
 	        if (action.equals("manual Game")) 
 	        {
 	        	manualMode=true;
-	        	//String idUser = JOptionPane.showInputDialog(start,"please enter your id: ");
+	        	String idUser = JOptionPane.showInputDialog(start,"please enter your id: ");
 	        	try 
 	        	{
-	        		//int id = Integer.parseInt(idUser);
-	        		//Game_Server.login(id);
-	        		Game_Server.login(209005495);
+	        		int id = Integer.parseInt(idUser);
+	        		Game_Server.login(id);
+	        		//Game_Server.login(209005495);
 	        	}
 	        	catch (Exception e) 
 	        	{
@@ -203,9 +204,11 @@ public class MyGameGUI extends JFrame implements ActionListener , MouseListener,
 	        	
 	        	try 
 	        	{
-	        		//int id = Integer.parseInt(idUser);
-	        		//Game_Server.login(id);
-	        		Game_Server.login(209005495);
+	        		//id = Integer.parseInt(idUser);
+	        		id = 209005495;
+	        		Game_Server.login(id);
+	        		
+	        		//Game_Server.login(209005495);
 	        	}
 	        	catch (Exception e) 
 	        	{
@@ -311,7 +314,6 @@ public class MyGameGUI extends JFrame implements ActionListener , MouseListener,
 				double srcScaleXNode = scale(srcNode.x(),minX, maxX, 0+Offset, (double)xRange);
 				double srcScaleYNode = scale(srcNode.y(),minY, maxY, 0+Offset, (double)yRange);
 				graph.fillOval((int)srcScaleXNode, (int)srcScaleYNode, 12, 12);
-				
 				graph.setColor(Color.blue);
 				graph.drawString("" + currNode.getKey(), (int)srcScaleXNode, (int)srcScaleYNode+20);
 
@@ -624,7 +626,6 @@ public class MyGameGUI extends JFrame implements ActionListener , MouseListener,
   		}
 		
         int ans =220;
-        System.out.println("260");
         for (Robot rob: robotArrayList)
         {
             for (Fruit fruit: fruitArrayList) 
@@ -632,7 +633,6 @@ public class MyGameGUI extends JFrame implements ActionListener , MouseListener,
                 edge_data temp = findFruitEdge(fruit.getLocation());
                 if(temp.getSrc()==rob.getSrc() || temp.getDest()==rob.getSrc())
                 {
-                	System.out.println("95");
                     return 80;
                 }
             }
@@ -676,7 +676,10 @@ public class MyGameGUI extends JFrame implements ActionListener , MouseListener,
 				throw new RuntimeException("Exception in run time");
 			}
 			
-		}	
+		}
+		SimpleDB db = new SimpleDB();
+		String s = db.printLogs(id, level);
+		JOptionPane.showMessageDialog(null, s);
 	}
 	
 
@@ -787,6 +790,8 @@ public class MyGameGUI extends JFrame implements ActionListener , MouseListener,
 				currFruit.setEdge(findFruitEdge(currFruit.getLocation()));
 	            edge_data edge=currFruit.getEdge();
 	            double returnshortst = graphAlgo.shortestPathDist(src, edge.getDest());
+	            System.out.println("edge src: "+edge.getSrc()+" edge dest: "+edge.getDest());
+	            System.out.println("src rob: "+src);
 	            if (returnshortst < shortestpathdist) 
 	            {
 	                try 
@@ -808,6 +813,7 @@ public class MyGameGUI extends JFrame implements ActionListener , MouseListener,
 	            }
 	        }
 	        return key;
+	        
 	    }
 
 	@Override
