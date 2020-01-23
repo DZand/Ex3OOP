@@ -52,9 +52,9 @@ public class MyGameGUI extends JFrame implements ActionListener , MouseListener,
 	private static double maxY = Double.NEGATIVE_INFINITY;
 	private static double minX = Double.POSITIVE_INFINITY;
 	private static double minY = Double.POSITIVE_INFINITY;
-	private final int Offset = 50;
-	private final int xRange = 600;
-	private final int yRange = 600;
+	private final int Offset = 200;
+	private final int xRange = 1500;
+	private final int yRange = 1500;
 	private int robotsCount;
 	private double epsilon = 0.001;
 	private Boolean PaintRobots;
@@ -63,6 +63,7 @@ public class MyGameGUI extends JFrame implements ActionListener , MouseListener,
 	private boolean firstpress=false;
 	private static DecimalFormat df2 = new DecimalFormat("#.##");
 	private static int score=0;
+	private static int moves=0;
 	public static int level;
 	
 	
@@ -319,7 +320,7 @@ public class MyGameGUI extends JFrame implements ActionListener , MouseListener,
 				{
 					for (edge_data edge : currGraph.getE(currNode.getKey())) 
 					{
-						Point3D srcPoint = currNode.getLocation();
+						//Point3D srcPoint = currNode.getLocation();
 						Point3D destPoint = currGraph.getNode(edge.getDest()).getLocation();
 						graph.setColor(Color.GRAY);
 						double destScaleX = scale(destPoint.x(),minX, maxX, 0+Offset, (double)xRange);
@@ -391,7 +392,9 @@ public class MyGameGUI extends JFrame implements ActionListener , MouseListener,
              JSONObject line = new JSONObject(info);
              JSONObject GameServer = line.getJSONObject("GameServer");
              score = GameServer.getInt("grade");
+             moves = GameServer.getInt("moves");
              graph.drawString("Score: "+ score, (int)minX+1000,(int)maxY+200);
+             graph.drawString("Moves: "+ moves, (int)minX+1000,(int)maxY+300);
          }
          catch (JSONException e) 
          {
@@ -402,14 +405,12 @@ public class MyGameGUI extends JFrame implements ActionListener , MouseListener,
 	//draw robots in automatic game
 	private void drawAutoRobots()
 	{
-		int numFruit = game.getFruits().size();
 		ArrayList<Fruit> fruitsTemp=new ArrayList<Fruit>();
 		for (Fruit f : fruitArrayList) 
 		{
 			fruitsTemp.add(f);
 		}
 		int robotKey=0;
-		Fruit fRemove=null;
 		for (int i =0; i<robotsCount;i++) 
 		{
 			if (fruitsTemp==null) 
@@ -422,30 +423,25 @@ public class MyGameGUI extends JFrame implements ActionListener , MouseListener,
 			}
 			else 
 			{
-				double maxF = Integer.MIN_VALUE;
-				for (Fruit f: fruitsTemp) 
-				{
-					if (f.getValue()>maxF) 
-					{
-						maxF = f.getValue();
-						if (f.getType()==1) 
-						{
-							robotKey = f.getEdge().getSrc();
-							fRemove=f;
-						}
-						else 
-						{
-							robotKey = f.getEdge().getDest();
-							fRemove=f;
-						}
-					}
+		            edge_data fruitEdge = findFruitEdge(fruitsTemp.get(0).getLocation());
+		            int fruitSrc=fruitEdge.getSrc();
+		            int fruitDest=fruitEdge.getDest();
+		            int robotLocation = 0;
+		            if (fruitsTemp.get(0).getType() == -1) 
+		            {
+		            	robotLocation=Math.max(fruitDest, fruitSrc);
+		            } 
+		            else if (fruitsTemp.get(0).getType() == 1) 
+		            {
+		            	robotLocation=Math.min(fruitDest, fruitSrc);
+		            }
+		            game.addRobot(robotLocation);
+		            fruitsTemp.remove(0);
 				}
-				game.addRobot(robotKey);
-				fruitsTemp.remove(fRemove);
 			}
-		}
 		PaintRobots=true;
-	}
+		}
+
 	
 	public int chooseScenario() 
 	{
@@ -563,6 +559,18 @@ public class MyGameGUI extends JFrame implements ActionListener , MouseListener,
 	            String robot_json = log.get(i);
 	            try 
 	            {
+	            	fruitArrayList.clear();
+	            	 //fruitArrayList= new ArrayList<Fruit>();
+	            		if(!game.getFruits().isEmpty())
+	            		{
+	            			for (String fruit : game.getFruits()) 
+	            			{
+	            				Fruit currFruit = new Fruit(fruit);
+	            				currFruit.setEdge(findFruitEdge(currFruit.getLocation()));
+	            				fruitArrayList.add(currFruit);
+	            			}
+	            		}
+
 	                JSONObject line = new JSONObject(robot_json);
 	                JSONObject obj = line.getJSONObject("Robot");
 	                int robotId = obj.getInt("id");
@@ -581,7 +589,7 @@ public class MyGameGUI extends JFrame implements ActionListener , MouseListener,
 	                    
 	                    game.chooseNextEdge(robotId, robotDest);
 	                }
-	                game.move();
+	               // game.move();
 	            }
 	            catch (JSONException e) 
 	            {
@@ -591,6 +599,49 @@ public class MyGameGUI extends JFrame implements ActionListener , MouseListener,
 		 }
 	}
 
+	
+	private int customSleep(graph g)
+	{
+		 fruitArrayList= new ArrayList<Fruit>();
+ 		if(!game.getFruits().isEmpty())
+ 		{
+ 			for (String fruit : game.getFruits()) 
+ 			{
+ 				Fruit currFruit = new Fruit(fruit);
+ 				currFruit.setEdge(findFruitEdge(currFruit.getLocation()));
+ 				fruitArrayList.add(currFruit);
+ 			}
+ 		}
+ 		
+ 		ArrayList<Robot> robotArrayList= new ArrayList<Robot>();
+  		if(!game.getRobots().isEmpty())
+  		{
+  			for (String rob : game.getRobots()) 
+  			{
+  				Robot currRob = new Robot(rob);
+  				robotArrayList.add(currRob);
+  			}
+  		}
+		
+        int ans =220;
+        System.out.println("260");
+        for (Robot rob: robotArrayList)
+        {
+            for (Fruit fruit: fruitArrayList) 
+            {
+                edge_data temp = findFruitEdge(fruit.getLocation());
+                if(temp.getSrc()==rob.getSrc() || temp.getDest()==rob.getSrc())
+                {
+                	System.out.println("95");
+                    return 80;
+                }
+            }
+        }
+        return ans;
+    }
+
+
+	
 
 	//game thread to update the gui during game
 	@Override
@@ -603,10 +654,12 @@ public class MyGameGUI extends JFrame implements ActionListener , MouseListener,
 				{
 					if(manualMode==false)
 					{
-						repaint();
 						moveRobots(this.game,this.currGraph);
-						game.move();
-						Thread.sleep(1000);
+						repaint();
+						//moveRobots(this.game,this.currGraph);
+						//game.move();
+						//Thread.sleep(50);
+						Thread.sleep(customSleep(this.currGraph));
 						
 					}
 					else if(manualMode==true)
@@ -614,6 +667,7 @@ public class MyGameGUI extends JFrame implements ActionListener , MouseListener,
 						game.move();
 						repaint();
 						Thread.sleep(1000);
+						//Thread.sleep(customSleep(this.currGraph));
 					}
 				}
 			}
@@ -622,7 +676,7 @@ public class MyGameGUI extends JFrame implements ActionListener , MouseListener,
 				throw new RuntimeException("Exception in run time");
 			}
 			
-		}		
+		}	
 	}
 	
 
@@ -756,7 +810,6 @@ public class MyGameGUI extends JFrame implements ActionListener , MouseListener,
 	        return key;
 	    }
 
-	
 	@Override
 	public void mouseEntered(MouseEvent arg0) 
 	{
