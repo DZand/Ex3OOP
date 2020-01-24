@@ -56,7 +56,7 @@ public class MyGameGUI extends JFrame implements ActionListener , MouseListener,
 	private final int xRange = 1500;
 	private final int yRange = 1500;
 	private int robotsCount;
-	private double epsilon = 0.001;
+	private double epsilon = 0.0000001;
 	private Boolean PaintRobots;
 	boolean manualMode;
 	Thread clientThread;
@@ -408,9 +408,10 @@ public class MyGameGUI extends JFrame implements ActionListener , MouseListener,
 	private void drawAutoRobots()
 	{
 		ArrayList<Fruit> fruitsTemp=new ArrayList<Fruit>();
-		for (Fruit f : fruitArrayList) 
+		for (String f : game.getFruits()) 
 		{
-			fruitsTemp.add(f);
+			Fruit currF = new Fruit(f);
+			fruitsTemp.add(currF);
 		}
 		int robotKey=0;
 		for (int i =0; i<robotsCount;i++) 
@@ -472,7 +473,7 @@ public class MyGameGUI extends JFrame implements ActionListener , MouseListener,
 	}
 	
 
-	//find onn which edge the fruit is on
+	//find on which edge the fruit is on
 	public edge_data findFruitEdge (Point3D fruitPoint) 
 	{
 		if(this.currGraph != null) 
@@ -502,6 +503,7 @@ public class MyGameGUI extends JFrame implements ActionListener , MouseListener,
 		return null;
 		
 	}
+
 
 	private double scale(double data, double r_min, double r_max, double t_min, double t_max) 
 	{
@@ -624,16 +626,20 @@ public class MyGameGUI extends JFrame implements ActionListener , MouseListener,
   				robotArrayList.add(currRob);
   			}
   		}
-		
-        int ans =220;
+		//stage 3: ans =190, return 67
+  		//stage 5: ans = 210 return 70
+       // stage 1: ans = 220 return 80
+  		int ans = 40;
         for (Robot rob: robotArrayList)
         {
-            for (Fruit fruit: fruitArrayList) 
+            for (String fruit: game.getFruits()) 
             {
-                edge_data temp = findFruitEdge(fruit.getLocation());
+            	Fruit currf = new Fruit(fruit);
+                edge_data temp = findFruitEdge(currf.getLocation());
                 if(temp.getSrc()==rob.getSrc() || temp.getDest()==rob.getSrc())
                 {
-                    return 80;
+                    //return 45;
+                	return 10;
                 }
             }
         }
