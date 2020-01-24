@@ -85,6 +85,7 @@ public class MyGameGUI extends JFrame implements ActionListener , MouseListener,
 		   
 	        PaintRobots = false;
 	        this.setSize(10000, 10000);
+	        this.setFont(new Font ("Courier", Font.PLAIN,30));
 	        setTitle("Best game ever");
 	        this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 	        this.addMouseListener(this);
@@ -127,8 +128,8 @@ public class MyGameGUI extends JFrame implements ActionListener , MouseListener,
 	        	String idUser = JOptionPane.showInputDialog(start,"please enter your id: ");
 	        	try 
 	        	{
-	        		int id = Integer.parseInt(idUser);
-	        		Game_Server.login(id);
+	        		//2401//int id = Integer.parseInt(idUser);
+	        		//2401//Game_Server.login(id);
 	        		//Game_Server.login(209005495);
 	        	}
 	        	catch (Exception e) 
@@ -205,8 +206,8 @@ public class MyGameGUI extends JFrame implements ActionListener , MouseListener,
 	        	try 
 	        	{
 	        		//id = Integer.parseInt(idUser);
-	        		id = 209005495;
-	        		Game_Server.login(id);
+	        		//2401//id = 209005495;
+	        		//2401//Game_Server.login(id);
 	        		
 	        		//Game_Server.login(209005495);
 	        	}
@@ -310,6 +311,7 @@ public class MyGameGUI extends JFrame implements ActionListener , MouseListener,
 			for (node_data currNode : currGraph.getV()) 
 			{
 				graph.setColor(Color.blue);
+				graph.setFont(new Font ("Courier", Font.PLAIN,50));
 				Point3D srcNode = currNode.getLocation();
 				double srcScaleXNode = scale(srcNode.x(),minX, maxX, 0+Offset, (double)xRange);
 				double srcScaleYNode = scale(srcNode.y(),minY, maxY, 0+Offset, (double)yRange);
@@ -336,6 +338,7 @@ public class MyGameGUI extends JFrame implements ActionListener , MouseListener,
 	                     int directed_y = (int) (srcScaleYNode * 0.15 + destScaleY * 0.85);
 	                     graph.fillOval(directed_x - 4, directed_y - 2, 7, 7);
 	                     graph.setColor(Color.DARK_GRAY);
+	                     graph.setFont(new Font ("Courier", Font.PLAIN,20));
 	                     graph.drawString("" + df2.format(edge.getWeight()), directed_x, directed_y);
 				}
 				}	
@@ -380,13 +383,19 @@ public class MyGameGUI extends JFrame implements ActionListener , MouseListener,
           }
 		 //draw timer
 		 timer(graph);
-		 //calculate score
-		 calcScore(graph);
+		 //calculate score and moves
+		 calcScoreAndMoves(graph);
+		 //printLevel(graph);
        }
 	}
 	
+	private void printLevel(Graphics graph)
+	{
+		graph.drawString("Current level: "+ level, (int)minX+200,(int)maxY+200);
+	}
+	
 	//calculate score and display on gui
-	private void calcScore(Graphics graph)
+	private void calcScoreAndMoves(Graphics graph)
 	{
 		 try 
          {
@@ -395,8 +404,8 @@ public class MyGameGUI extends JFrame implements ActionListener , MouseListener,
              JSONObject GameServer = line.getJSONObject("GameServer");
              score = GameServer.getInt("grade");
              moves = GameServer.getInt("moves");
-             graph.drawString("Score: "+ score, (int)minX+1000,(int)maxY+200);
-             graph.drawString("Moves: "+ moves, (int)minX+1000,(int)maxY+300);
+             graph.drawString("Score: "+ score, (int)minX+1500,(int)maxY+200);
+             graph.drawString("Moves: "+ moves, (int)minX+1500,(int)maxY+300);
          }
          catch (JSONException e) 
          {
@@ -683,9 +692,9 @@ public class MyGameGUI extends JFrame implements ActionListener , MouseListener,
 			}
 			
 		}
-		SimpleDB db = new SimpleDB();
-		String s = db.printLogs(id, level);
-		JOptionPane.showMessageDialog(null, s);
+		//2401//SimpleDB db = new SimpleDB();
+		//2401//String s = db.printLogs(id, level);
+		//2401//JOptionPane.showMessageDialog(null, s);
 	}
 	
 
@@ -718,7 +727,7 @@ public class MyGameGUI extends JFrame implements ActionListener , MouseListener,
 	//draw timer on gui
 	private void timer(Graphics graph) 
 	{
-		 graph.drawString("TIME TO END: "+ (int)(game.timeToEnd()/1000), (int)minX+1000,(int)maxY+100);
+		 graph.drawString("TIME TO END: "+ (int)(game.timeToEnd()/1000), (int)minX+1500,(int)maxY+100);
 	}
 	
 
@@ -796,8 +805,6 @@ public class MyGameGUI extends JFrame implements ActionListener , MouseListener,
 				currFruit.setEdge(findFruitEdge(currFruit.getLocation()));
 	            edge_data edge=currFruit.getEdge();
 	            double returnshortst = graphAlgo.shortestPathDist(src, edge.getDest());
-	            System.out.println("edge src: "+edge.getSrc()+" edge dest: "+edge.getDest());
-	            System.out.println("src rob: "+src);
 	            if (returnshortst < shortestpathdist) 
 	            {
 	                try 

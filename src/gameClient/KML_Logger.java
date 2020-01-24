@@ -126,7 +126,7 @@ public class KML_Logger
 	            	File f= new File("kmlFile" + MyGameGUI.getLevel()+".kml");
 	            	kmldoc.marshal(f);
 	                String kmlString =  new String(Files.readAllBytes(Paths.get(f.getName())));
-	                game.sendKML(kmlString);
+	                //2401//game.sendKML(kmlString);
 	            }	            	
 	        }
 	        catch (Exception e)
