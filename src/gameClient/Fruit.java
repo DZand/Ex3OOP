@@ -10,6 +10,7 @@ public class Fruit
     private double _fruitValue;
     private int _fruitType;
     private edge_data _fruitEdge;
+    private int _fruitTag;
 
     public Fruit() 
     {
@@ -52,7 +53,10 @@ public class Fruit
 	
 	public void setEdge(edge_data edge) 
 	{
-		this._fruitEdge = edge;
+		if(edge!=null)
+		{
+			this._fruitEdge = edge;
+		}
 	}
 	
 	public edge_data getEdge() 
@@ -73,6 +77,15 @@ public class Fruit
     public double getValue() 
     {
         return this._fruitValue;
+    }
+    
+    public void setTag(int t)
+    {
+        this._fruitTag=t;
+    }
+    public int getTag()
+    {
+        return this._fruitTag;
     }
 
 

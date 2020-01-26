@@ -19,12 +19,14 @@ import java.text.DecimalFormat;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 
 import javax.imageio.ImageIO;
 import javax.management.RuntimeErrorException;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
+import javax.swing.plaf.synth.SynthSeparatorUI;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -66,6 +68,7 @@ public class MyGameGUI extends JFrame implements ActionListener , MouseListener,
 	private static int moves=0;
 	public static int level;
 	public static int id;
+	HashMap<Integer,int []> scenariosSleepTime= new HashMap<>();
 	
 	
 	public static void main(String[] args) 
@@ -102,6 +105,30 @@ public class MyGameGUI extends JFrame implements ActionListener , MouseListener,
 				e.printStackTrace();
 			}
 			
+			
+			int [] arr0= {220,80};
+			int [] arr1= {150,70};
+			int [] arr3= {210,70};
+			int [] arr5= {190,78};
+			int [] arr9= {190,78};
+			int [] arr11= {210,40};
+			int [] arr13= {210,40};
+			int [] arr16= {210,40};
+			int [] arr19= {210,40};
+			int [] arr20= {210,40};
+			int [] arr23= {210,40};
+			scenariosSleepTime.put(0, arr0);
+			scenariosSleepTime.put(1, arr1); 
+			scenariosSleepTime.put(3, arr3); 
+			scenariosSleepTime.put(5, arr5); 
+			scenariosSleepTime.put(9, arr9); 
+			scenariosSleepTime.put(11, arr11);
+			scenariosSleepTime.put(13, arr13);
+			scenariosSleepTime.put(16, arr16);
+			scenariosSleepTime.put(19,arr19);
+			scenariosSleepTime.put(20, arr20);
+			scenariosSleepTime.put(23, arr23); 
+			
 			MenuBar menuBar = new MenuBar();
 			Menu type = new Menu("Type");
 			menuBar.add(type);
@@ -128,8 +155,8 @@ public class MyGameGUI extends JFrame implements ActionListener , MouseListener,
 	        	String idUser = JOptionPane.showInputDialog(start,"please enter your id: ");
 	        	try 
 	        	{
-	        		//2401//int id = Integer.parseInt(idUser);
-	        		//2401//Game_Server.login(id);
+	        		id = Integer.parseInt(idUser);
+	        		Game_Server.login(id);
 	        		//Game_Server.login(209005495);
 	        	}
 	        	catch (Exception e) 
@@ -201,13 +228,13 @@ public class MyGameGUI extends JFrame implements ActionListener , MouseListener,
 	        if (action.equals("Auto Game")) 
 	        {
 	        	manualMode=false;
-	            //String idUser = JOptionPane.showInputDialog(start,"please enter your id: ");
+	            String idUser = JOptionPane.showInputDialog(start,"please enter your id: ");
 	        	
 	        	try 
 	        	{
-	        		//id = Integer.parseInt(idUser);
+	        		id = Integer.parseInt(idUser);
 	        		//2401//id = 209005495;
-	        		//2401//Game_Server.login(id);
+	        		Game_Server.login(id);
 	        		
 	        		//Game_Server.login(209005495);
 	        	}
@@ -260,7 +287,6 @@ public class MyGameGUI extends JFrame implements ActionListener , MouseListener,
 	                    drawAutoRobots();
 	                    PaintRobots=true;
 	                    game.startGame();
-	                    
 	                  //open kml thread to save data during game
 	                	Thread kmlThread = new Thread(new Runnable() 
 	        			{
@@ -420,6 +446,7 @@ public class MyGameGUI extends JFrame implements ActionListener , MouseListener,
 		for (String f : game.getFruits()) 
 		{
 			Fruit currF = new Fruit(f);
+			currF.setEdge(findFruitEdge(currF.getLocation()));
 			fruitsTemp.add(currF);
 		}
 		int robotKey=0;
@@ -435,7 +462,8 @@ public class MyGameGUI extends JFrame implements ActionListener , MouseListener,
 			}
 			else 
 			{
-		            edge_data fruitEdge = findFruitEdge(fruitsTemp.get(0).getLocation());
+					edge_data fruitEdge = fruitsTemp.get(0).getEdge();
+		            //edge_data fruitEdge = findFruitEdge(fruitsTemp.get(0).getLocation());
 		            int fruitSrc=fruitEdge.getSrc();
 		            int fruitDest=fruitEdge.getDest();
 		            int robotLocation = 0;
@@ -485,6 +513,8 @@ public class MyGameGUI extends JFrame implements ActionListener , MouseListener,
 	//find on which edge the fruit is on
 	public edge_data findFruitEdge (Point3D fruitPoint) 
 	{
+		boolean found=false;
+		edge_data foundEdge = null;
 		if(this.currGraph != null) 
 		{
 			if (this.currGraph.getV()!=null) 
@@ -501,16 +531,30 @@ public class MyGameGUI extends JFrame implements ActionListener , MouseListener,
 							double fruitDistanceToPoints= Math.sqrt((Math.pow((src.x()-fruitPoint.x()), 2)+Math.pow((src.y()-fruitPoint.y()),2))) + Math.sqrt((Math.pow((fruitPoint.x()-dest.x()), 2)+Math.pow((fruitPoint.y()-dest.y()), 2)));
 							if(Math.abs(fruitDistanceToPoints-edgeDistance)<epsilon)
 							{
-								return edge;
+								found=true;
+								foundEdge=edge;
 							}
 						}
-					}
 
+					}
 				}
 			}
 		}
-		return null;
-		
+		if(found)
+		{
+			return foundEdge;
+		}
+			
+		else if(!found && foundEdge==null)
+		{
+			return null;
+		}
+		else
+		{
+			return null;
+		}
+			
+
 	}
 
 
@@ -589,20 +633,24 @@ public class MyGameGUI extends JFrame implements ActionListener , MouseListener,
 	                int robotId = obj.getInt("id");
 	                int robotSrc = obj.getInt("src");
 	                int robotDest = obj.getInt("dest");
+	                //int nodetoGO = getNextNode(robotSrc, currGraph, fruitArrayList);
 	                if(robotDest==-1) 
 	                {
 	                	try
 	                	{
+	                		//robotDest = nodetoGO;
+	                        //game.chooseNextEdge(robotId, robotDest);
 	                		robotDest = nextNode(robotSrc,game);
+	                		
+	                		game.chooseNextEdge(robotId, robotDest);
 	                	}
 	                	catch(Exception e)
 	                	{
 	                		throw new RuntimeException("Error in nextNode function");
 	                	}
 	                    
-	                    game.chooseNextEdge(robotId, robotDest);
+	                    
 	                }
-	               // game.move();
 	            }
 	            catch (JSONException e) 
 	            {
@@ -638,7 +686,19 @@ public class MyGameGUI extends JFrame implements ActionListener , MouseListener,
 		//stage 3: ans =190, return 67
   		//stage 5: ans = 210 return 70
        // stage 1: ans = 220 return 80
-  		int ans = 40;
+  		int slow=0;
+  		int fast=0;
+  		if(scenariosSleepTime.get(level)!=null)
+  		{
+  			slow = scenariosSleepTime.get(level)[0];
+  			fast=scenariosSleepTime.get(level)[1];
+  		}
+  		else
+  		{
+  			slow=80;
+  			fast=80;
+  		}
+  		//int ans = 40;
         for (Robot rob: robotArrayList)
         {
             for (String fruit: game.getFruits()) 
@@ -648,11 +708,11 @@ public class MyGameGUI extends JFrame implements ActionListener , MouseListener,
                 if(temp.getSrc()==rob.getSrc() || temp.getDest()==rob.getSrc())
                 {
                     //return 45;
-                	return 10;
+                	return fast;
                 }
             }
         }
-        return ans;
+        return slow;
     }
 
 
@@ -670,11 +730,12 @@ public class MyGameGUI extends JFrame implements ActionListener , MouseListener,
 					if(manualMode==false)
 					{
 						moveRobots(this.game,this.currGraph);
+						Thread.sleep(customSleep(this.currGraph));
 						repaint();
 						//moveRobots(this.game,this.currGraph);
 						//game.move();
 						//Thread.sleep(50);
-						Thread.sleep(customSleep(this.currGraph));
+						
 						
 					}
 					else if(manualMode==true)
@@ -692,9 +753,9 @@ public class MyGameGUI extends JFrame implements ActionListener , MouseListener,
 			}
 			
 		}
-		//2401//SimpleDB db = new SimpleDB();
-		//2401//String s = db.printLogs(id, level);
-		//2401//JOptionPane.showMessageDialog(null, s);
+		SimpleDB db = new SimpleDB();
+		String s = db.printLogs(id, level);
+		JOptionPane.showMessageDialog(null, s);
 	}
 	
 
@@ -805,11 +866,14 @@ public class MyGameGUI extends JFrame implements ActionListener , MouseListener,
 				currFruit.setEdge(findFruitEdge(currFruit.getLocation()));
 	            edge_data edge=currFruit.getEdge();
 	            double returnshortst = graphAlgo.shortestPathDist(src, edge.getDest());
+	            
+	            
 	            if (returnshortst < shortestpathdist) 
 	            {
 	                try 
 	                {
-	                    shortestpathdist = graphAlgo.shortestPathDist(src, edge.getDest());
+	                    //shortestpathdist = graphAlgo.shortestPathDist(src, edge.getDest());
+	                	shortestpathdist=returnshortst;
 	                    if(graphAlgo.shortestPath(src, edge.getDest()).size()==1)
 	                    {
 	                    	key=edge.getSrc();
@@ -825,9 +889,107 @@ public class MyGameGUI extends JFrame implements ActionListener , MouseListener,
 	                }
 	            }
 	        }
+
+	        
 	        return key;
 	        
 	    }
+	    
+	 /**
+	 public int getNextNode(int r , graph g, ArrayList<Fruit> arr ) 
+	 {
+	        Graph_Algo p = new Graph_Algo(g);
+	        edge_data temp = null;
+	        double min = Integer.MAX_VALUE;
+	        double disFromRob = 0;
+	        int whereTo=-1;
+	        int finalWhereTo =-1;
+	        for (Fruit fruit: arr) {
+	            if (fruit.getTag() == 0) 
+	            {
+	                temp = findFruitEdge(fruit.getLocation());
+	                if (fruit.getType() == -1) 
+	                {
+	                    if (temp.getDest() > temp.getSrc())
+	                    {
+	                        disFromRob = p.shortestPathDist(r, temp.getDest());
+	                        whereTo = temp.getSrc();
+	                    } 
+	                    else if (temp.getSrc() > temp.getDest()) 
+	                    {
+	                        disFromRob = p.shortestPathDist(r, temp.getSrc());
+	                        whereTo = temp.getDest();
+	                    }
+	                    if(r==temp.getSrc()) 
+	                    {
+	                        fruit.setTag(1);
+	                        return temp.getDest();
+	                    }
+	                    if(r==temp.getDest()) 
+	                    {
+	                        fruit.setTag(1);
+	                        return temp.getSrc();
+	                    }
+	                    if (disFromRob < min) 
+	                    {
+	                        min = disFromRob;
+	                        finalWhereTo = whereTo;
+	                    }
+
+	                } else if (fruit.getType() == 1)
+	                {
+	                    if (temp.getDest() < temp.getSrc()) 
+	                    {
+	                        disFromRob = p.shortestPathDist(r, temp.getDest());
+	                        whereTo = temp.getDest();
+	                    } else if (temp.getSrc() < temp.getDest()) 
+	                    {
+	                        disFromRob = p.shortestPathDist(r, temp.getSrc());
+	                        whereTo = temp.getSrc();
+	                    }
+	                    if(r==temp.getSrc())
+	                    {
+	                        fruit.setTag(1);
+	                        return temp.getDest();
+	                    }
+	                    if(r==temp.getDest()) 
+	                    {
+	                        fruit.setTag(1);
+	                        return temp.getSrc();
+	                    }
+	                    if (disFromRob < min) 
+	                    {
+	                        min = disFromRob;
+	                        finalWhereTo = whereTo;
+	                    }
+
+	                }
+
+	            }
+
+	        }
+
+	        List<node_data> ans = p.shortestPath(r, finalWhereTo);
+	        for (Fruit fruit: arr) 
+	        {
+	            temp = findFruitEdge(fruit.getLocation());
+	            if(temp.getDest()==finalWhereTo || temp.getSrc()==finalWhereTo)
+	            {
+	                fruit.setTag(1);
+	                break;
+	            }
+	        }
+	        if (ans.size() == 1) 
+	        {
+	            List<node_data> ans2 = p.shortestPath(r, (finalWhereTo + 15) % 11);
+
+	            return ans2.get(1).getKey();
+	        }
+	        return ans.get(1).getKey();
+
+
+	    }
+	    */
 
 	@Override
 	public void mouseEntered(MouseEvent arg0) 
