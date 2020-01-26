@@ -633,13 +633,10 @@ public class MyGameGUI extends JFrame implements ActionListener , MouseListener,
 	                int robotId = obj.getInt("id");
 	                int robotSrc = obj.getInt("src");
 	                int robotDest = obj.getInt("dest");
-	                //int nodetoGO = getNextNode(robotSrc, currGraph, fruitArrayList);
 	                if(robotDest==-1) 
 	                {
 	                	try
 	                	{
-	                		//robotDest = nodetoGO;
-	                        //game.chooseNextEdge(robotId, robotDest);
 	                		robotDest = nextNode(robotSrc,game);
 	                		
 	                		game.chooseNextEdge(robotId, robotDest);
@@ -895,101 +892,7 @@ public class MyGameGUI extends JFrame implements ActionListener , MouseListener,
 	        
 	    }
 	    
-	 /**
-	 public int getNextNode(int r , graph g, ArrayList<Fruit> arr ) 
-	 {
-	        Graph_Algo p = new Graph_Algo(g);
-	        edge_data temp = null;
-	        double min = Integer.MAX_VALUE;
-	        double disFromRob = 0;
-	        int whereTo=-1;
-	        int finalWhereTo =-1;
-	        for (Fruit fruit: arr) {
-	            if (fruit.getTag() == 0) 
-	            {
-	                temp = findFruitEdge(fruit.getLocation());
-	                if (fruit.getType() == -1) 
-	                {
-	                    if (temp.getDest() > temp.getSrc())
-	                    {
-	                        disFromRob = p.shortestPathDist(r, temp.getDest());
-	                        whereTo = temp.getSrc();
-	                    } 
-	                    else if (temp.getSrc() > temp.getDest()) 
-	                    {
-	                        disFromRob = p.shortestPathDist(r, temp.getSrc());
-	                        whereTo = temp.getDest();
-	                    }
-	                    if(r==temp.getSrc()) 
-	                    {
-	                        fruit.setTag(1);
-	                        return temp.getDest();
-	                    }
-	                    if(r==temp.getDest()) 
-	                    {
-	                        fruit.setTag(1);
-	                        return temp.getSrc();
-	                    }
-	                    if (disFromRob < min) 
-	                    {
-	                        min = disFromRob;
-	                        finalWhereTo = whereTo;
-	                    }
-
-	                } else if (fruit.getType() == 1)
-	                {
-	                    if (temp.getDest() < temp.getSrc()) 
-	                    {
-	                        disFromRob = p.shortestPathDist(r, temp.getDest());
-	                        whereTo = temp.getDest();
-	                    } else if (temp.getSrc() < temp.getDest()) 
-	                    {
-	                        disFromRob = p.shortestPathDist(r, temp.getSrc());
-	                        whereTo = temp.getSrc();
-	                    }
-	                    if(r==temp.getSrc())
-	                    {
-	                        fruit.setTag(1);
-	                        return temp.getDest();
-	                    }
-	                    if(r==temp.getDest()) 
-	                    {
-	                        fruit.setTag(1);
-	                        return temp.getSrc();
-	                    }
-	                    if (disFromRob < min) 
-	                    {
-	                        min = disFromRob;
-	                        finalWhereTo = whereTo;
-	                    }
-
-	                }
-
-	            }
-
-	        }
-
-	        List<node_data> ans = p.shortestPath(r, finalWhereTo);
-	        for (Fruit fruit: arr) 
-	        {
-	            temp = findFruitEdge(fruit.getLocation());
-	            if(temp.getDest()==finalWhereTo || temp.getSrc()==finalWhereTo)
-	            {
-	                fruit.setTag(1);
-	                break;
-	            }
-	        }
-	        if (ans.size() == 1) 
-	        {
-	            List<node_data> ans2 = p.shortestPath(r, (finalWhereTo + 15) % 11);
-
-	            return ans2.get(1).getKey();
-	        }
-	        return ans.get(1).getKey();
-
-
-	    }
-	    */
+	
 
 	@Override
 	public void mouseEntered(MouseEvent arg0) 
