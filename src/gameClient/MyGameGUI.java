@@ -68,7 +68,6 @@ public class MyGameGUI extends JFrame implements ActionListener , MouseListener,
 	private static int moves=0;
 	public static int level;
 	public static int id;
-	HashMap<Integer,int []> scenariosSleepTime= new HashMap<>();
 	
 	
 	public static void main(String[] args) 
@@ -105,29 +104,7 @@ public class MyGameGUI extends JFrame implements ActionListener , MouseListener,
 				e.printStackTrace();
 			}
 			
-			
-			int [] arr0= {220,80};
-			int [] arr1= {150,70};
-			int [] arr3= {210,70};
-			int [] arr5= {190,78};
-			int [] arr9= {190,78};
-			int [] arr11= {210,40};
-			int [] arr13= {210,40};
-			int [] arr16= {210,40};
-			int [] arr19= {210,40};
-			int [] arr20= {210,40};
-			int [] arr23= {210,40};
-			scenariosSleepTime.put(0, arr0);
-			scenariosSleepTime.put(1, arr1); 
-			scenariosSleepTime.put(3, arr3); 
-			scenariosSleepTime.put(5, arr5); 
-			scenariosSleepTime.put(9, arr9); 
-			scenariosSleepTime.put(11, arr11);
-			scenariosSleepTime.put(13, arr13);
-			scenariosSleepTime.put(16, arr16);
-			scenariosSleepTime.put(19,arr19);
-			scenariosSleepTime.put(20, arr20);
-			scenariosSleepTime.put(23, arr23); 
+
 			
 			MenuBar menuBar = new MenuBar();
 			Menu type = new Menu("Type");
@@ -680,22 +657,8 @@ public class MyGameGUI extends JFrame implements ActionListener , MouseListener,
   				robotArrayList.add(currRob);
   			}
   		}
-		//stage 3: ans =190, return 67
-  		//stage 5: ans = 210 return 70
-       // stage 1: ans = 220 return 80
-  		int slow=0;
-  		int fast=0;
-  		if(scenariosSleepTime.get(level)!=null)
-  		{
-  			slow = scenariosSleepTime.get(level)[0];
-  			fast=scenariosSleepTime.get(level)[1];
-  		}
-  		else
-  		{
-  			slow=80;
-  			fast=80;
-  		}
-  		//int ans = 40;
+  		
+  		int ans = 100;
         for (Robot rob: robotArrayList)
         {
             for (String fruit: game.getFruits()) 
@@ -704,12 +667,11 @@ public class MyGameGUI extends JFrame implements ActionListener , MouseListener,
                 edge_data temp = findFruitEdge(currf.getLocation());
                 if(temp.getSrc()==rob.getSrc() || temp.getDest()==rob.getSrc())
                 {
-                    //return 45;
-                	return fast;
+                	return 50;
                 }
             }
         }
-        return slow;
+        return ans;
     }
 
 
